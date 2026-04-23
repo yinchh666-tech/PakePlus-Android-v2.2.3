@@ -1,11 +1,1439 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f5f7fb" />
+<title>时空卦四层十二宫排盘（离线版）</title>
+<style>
+   :root {
+    --bg: #f5f1e8;
+    --card: #f5f1e8;
+    --line: #e5ded0;
+    --line-strong: #ddd4c4;
+    --text: #1f1f1f;
+    --muted: #7d786f;
+    --accent: #3f6ed8;
+    --accent-soft: #eef3ff;
+    --danger: #b53a3a;
+    --shadow: none;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    overflow-x: hidden;
+  }
+  body {
+    min-height: 100vh;
+  }
+  .app {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
+  }
+  .stack {
+    display: grid;
+    gap: 14px;
+    padding: 14px 0 28px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-head {
+    padding: 14px 16px 0;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .section-sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .panel {
+    padding: 14px 16px 16px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .segmented {
+    display: inline-flex;
+    background: #eef2f8;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .segmented button {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    min-height: 40px;
+  }
+  .segmented button.active {
+    background: #faf7ef;
+    color: var(--accent);
+    box-shadow: 0 2px 8px rgba(31,75,204,.12);
+  }
+  .grid {
+    display: grid;
+    gap: 10px;
+  }
+  .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+  .field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .input, select, textarea, button {
+    font: inherit;
+  }
+  .input, select, textarea {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #faf7ef;
+    padding: 10px 12px;
+    color: var(--text);
+    outline: none;
+  }
+  .input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(31,75,204,.12);
+  }
+  textarea {
+    min-height: 84px;
+    resize: vertical;
+  }
+  .fieldset {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    background: #f7f2e8;
+  }
+  .legend {
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .row > * {
+    flex: 1 1 0;
+  }
+  .btns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .btn {
+    min-height: 46px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: #faf7ef;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn.soft {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+  }
+  .btn.danger {
+    color: var(--danger);
+  }
+  .helper {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  .hide { display: none !important; }
+
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+  .summary-item {
+    border: 1px solid var(--line);
+    background: #f7f2e8;
+    border-radius: 14px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .summary-k {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .summary-v {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .plate-wrap {
+    padding: 8px 10px 14px;
+  }
+  .plate-shell {
+    background: transparent;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+  }
+  .plate {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    position: relative;
+    background: transparent;
+  }
+  .ring-char {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5em;
+    height: 1.5em;
+    line-height: 1;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .ring-1 {
+    color: #111111;
+    font-size: clamp(15px, 2.8vw, 22px);
+  }
+  .ring-2 {
+    color: #111111;
+    font-size: clamp(16px, 3.2vw, 26px);
+  }
+  .ring-3 {
+    color: #2f87ff;
+    font-size: clamp(18px, 3.7vw, 30px);
+  }
+  .ring-4 {
+    color: #5c4835;
+    font-size: clamp(20px, 4.2vw, 34px);
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 10px 14px;
+  }
+
+  .result-text {
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    background: #f7f2e8;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .history-list {
+    display: grid;
+    gap: 10px;
+  }
+  .history-item {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+    background: #faf7ef;
+  }
+  .history-top {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 8px;
+  }
+  .history-title {
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .history-time {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .history-note {
+    margin: 8px 0;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    background: #f7f2e8;
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+  .history-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+    white-space: pre-wrap;
+  }
+  .history-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .empty {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 8px 0;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom) + 18px);
+    transform: translateX(-50%) translateY(16px);
+    background: rgba(18,32,51,.92);
+    color: #fff;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: .24s ease;
+    z-index: 999;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 700px) {
+    .summary-bar {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .grid.cols-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 520px) {
+    .app {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+    .panel, .section-head {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+    .plate-wrap, .actions {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    .layer .k {
+      font-size: 9px;
+      margin-right: 3px;
+    }
+    .layer .v {
+      font-size: clamp(12px, 3.5vw, 18px);
+    }
+    .btns {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stack">
+    <section class="card">
+      <div class="section-head">
+        <h1 class="section-title">时空卦四层十二宫排盘</h1>
+        <div class="section-sub">单文件离线版｜安卓竖屏优先｜本地记录、复制文本、导出图片均可离线使用</div>
+      </div>
+      <div class="panel">
+        <div class="toolbar">
+          <div class="segmented" id="inputModeBar">
+            <button type="button" class="active" data-mode="manual">手动四柱</button>
+            <button type="button" data-mode="solar">公历辅助</button>
+            <button type="button" data-mode="lunar">农历辅助</button>
+          </div>
+        </div>
+
+        <div id="manualPane" class="grid" style="gap:12px;">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>性别</label>
+              <select id="gender"></select>
+            </div>
+            <div class="field">
+              <label>占卜之时</label>
+              <select id="divinationBranch"></select>
+            </div>
+          </div>
+
+          <div class="fieldset">
+            <div class="legend">四柱输入</div>
+
+            <div class="grid cols-4">
+              <div class="field"><label>年干</label><select id="yearStem"></select></div>
+              <div class="field"><label>年支</label><select id="yearBranch"></select></div>
+              <div class="field"><label>月干</label><select id="monthStem"></select></div>
+              <div class="field"><label>月支</label><select id="monthBranch"></select></div>
+            </div>
+
+            <div class="grid cols-4">
+              <div class="field"><label>日干</label><select id="dayStem"></select></div>
+              <div class="field"><label>日支</label><select id="dayBranch"></select></div>
+              <div class="field"><label>时干</label><select id="hourStem"></select></div>
+              <div class="field"><label>时支</label><select id="hourBranch"></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="solarPane" class="grid hide" style="gap:12px;">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>性别</label>
+              <select id="solarGender"></select>
+            </div>
+            <div class="field">
+              <label>占卜之时</label>
+              <select id="solarDivinationBranch"></select>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="field">
+              <label>公历日期</label>
+              <input class="input" id="solarDate" type="date" />
+            </div>
+            <div class="field">
+              <label>时间</label>
+              <input class="input" id="solarTime" type="time" value="12:00" />
+            </div>
+          </div>
+          <div class="btns" style="margin-top:0;">
+            <button type="button" class="btn soft" id="fillFromSolar">自动转四柱</button>
+          </div>
+          <div class="helper">公历辅助会离线计算年柱、月柱、日柱、时柱，并自动回填到手动四柱区。若你已有准确四柱，优先使用手动输入。</div>
+        </div>
+
+        <div id="lunarPane" class="grid hide" style="gap:12px;">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>性别</label>
+              <select id="lunarGender"></select>
+            </div>
+            <div class="field">
+              <label>占卜之时</label>
+              <select id="lunarDivinationBranch"></select>
+            </div>
+          </div>
+          <div class="grid cols-4">
+            <div class="field">
+              <label>农历年</label>
+              <select id="lunarYear"></select>
+            </div>
+            <div class="field">
+              <label>农历月</label>
+              <select id="lunarMonth"></select>
+            </div>
+            <div class="field">
+              <label>农历日</label>
+              <select id="lunarDay"></select>
+            </div>
+            <div class="field">
+              <label>闰月</label>
+              <select id="lunarLeap">
+                <option value="0">否</option>
+                <option value="1">是</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="field">
+              <label>时间</label>
+              <input class="input" id="lunarTime" type="time" value="12:00" />
+            </div>
+            <div class="field">
+              <label>换算后的公历</label>
+              <input class="input" id="lunarToSolarPreview" type="text" readonly placeholder="点击自动转四柱后显示" />
+            </div>
+          </div>
+          <div class="btns" style="margin-top:0;">
+            <button type="button" class="btn soft" id="fillFromLunar">自动转四柱</button>
+          </div>
+          <div class="helper">农历辅助支持 1900–2100 年离线换算，闰月请按实际情况选择；换算结果会自动回填到手动四柱区。</div>
+        </div>
+
+        <div class="btns">
+          <button type="button" class="btn primary" id="calcBtn">一键排盘</button>
+          <button type="button" class="btn" id="resetBtn">一键重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="plateCard">
+      <div class="section-head">
+        <h2 class="section-title">四层十二宫</h2>
+        <div class="section-sub">最内层宫位地支｜第二层月将地支｜第三层十二天将｜最外层天干</div>
+      </div>
+      <div class="summary-bar">
+        <div class="summary-item"><div class="summary-k">月将</div><div class="summary-v" id="summaryMonthGeneral">—</div></div>
+        <div class="summary-item"><div class="summary-k">贵人</div><div class="summary-v" id="summaryNoble">—</div></div>
+        <div class="summary-item"><div class="summary-k">昼夜</div><div class="summary-v" id="summaryDayNight">—</div></div>
+        <div class="summary-item"><div class="summary-k">方向</div><div class="summary-v" id="summaryDirection">—</div></div>
+      </div>
+      <div class="plate-wrap">
+        <div class="plate-shell">
+          <div class="plate" id="plateCanvas"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn soft" id="copyBtn">复制文本</button>
+        <button type="button" class="btn soft" id="imageBtn">保存图片</button>
+        <button type="button" class="btn soft" id="saveRecordBtn">保存记录</button>
+        <button type="button" class="btn" id="recalcBtn">重新计算</button>
+      </div>
+      <div class="panel" style="padding-top:0;">
+        <div class="field">
+          <label>本次备注</label>
+          <textarea id="noteInput" placeholder="可选：输入这次排盘备注，保存记录时会一起写入本地"></textarea>
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <label>排盘文本</label>
+          <div id="resultText" class="result-text">请先输入信息后点击“一键排盘”。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2 class="section-title">本地排盘记录</h2>
+        <div class="section-sub">仅保存到当前浏览器本地，不上传，不联网。</div>
+      </div>
+      <div class="panel">
+        <div class="btns" style="margin-top:0; margin-bottom:12px;">
+          <button type="button" class="btn" id="clearHistoryBtn">清空记录</button>
+          <button type="button" class="btn" id="exportHistoryBtn">导出记录文本</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+  const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+  const YANG_STEMS = new Set(["甲","丙","戊","庚","壬"]);
+  const YIN_STEMS = new Set(["乙","丁","己","辛","癸"]);
+  const YANG_BRANCHES = ["子","寅","辰","午","申","戌"];
+  const YIN_BRANCHES = ["丑","卯","巳","未","酉","亥"];
+  const PALACES = ["巳","午","未","申","酉","戌","亥","子","丑","寅","卯","辰"];
+  const PALACE_GRID = {
+    0: "0 / 1", 1: "0 / 2", 2: "0 / 3", 3: "0 / 4",
+    4: "1 / 4", 5: "2 / 4",
+    6: "3 / 4", 7: "3 / 3", 8: "3 / 2", 9: "3 / 1",
+    10: "2 / 1", 11: "1 / 1"
+  };
+  const GENERALS = ["贵","蛇","雀","合","勾","龙","空","虎","常","玄","阴","后"];
+  const MONTH_GENERAL_MAP = {
+    1: "亥", 2: "戌", 3: "酉", 4: "申", 5: "未", 6: "午",
+    7: "巳", 8: "辰", 9: "卯", 10: "寅", 11: "丑", 12: "子"
+  };
+  const MONTH_GENERAL_NAME = {
+    "亥": "登明", "戌": "河魁", "酉": "从魁", "申": "传送", "未": "小吉", "午": "胜光",
+    "巳": "太乙", "辰": "天罡", "卯": "太冲", "寅": "功曹", "丑": "大吉", "子": "神后"
+  };
+  const BRANCH_VALUE_MAIN = {
+    "寅":1,"卯":2,"辰":3,"巳":4,"午":5,"未":6,"申":7,"酉":8,"戌":9,"亥":10,"子":11,"丑":12
+  };
+  const BRANCH_VALUE_HOUR = {
+    "子":1,"丑":2,"寅":3,"卯":4,"辰":5,"巳":6,"午":7,"未":8,"申":9,"酉":10,"戌":11,"亥":12
+  };
+  const NOBLE_MAP = {
+    "甲":["丑","未"],"戊":["丑","未"],"庚":["丑","未"],
+    "乙":["子","申"],"己":["子","申"],
+    "丙":["亥","酉"],"丁":["亥","酉"],
+    "壬":["巳","卯"],"癸":["巳","卯"],
+    "辛":["午","寅"]
+  };
+  const DAY_TIME_BRANCHES = new Set(["子","丑","寅","卯","辰","巳","午","未","申"]);
+  const LAYER_KEYS = ["宫位","月将","天将","天干"];
+
+  const lunarInfo = [
+0x4bd8,0x4ae0,0xa570,0x54d5,0xd260,0xd950,0x5554,0x56af,0x9ad0,0x55d2,
+0x4ae0,0xa5b6,0xa4d0,0xd250,0xd295,0xb54f,0xd6a0,0xada2,0x95b0,0x4977,
+0x497f,0xa4b0,0xb4b5,0x6a50,0x6d40,0xab54,0x2b6f,0x9570,0x52f2,0x4970,
+0x6566,0xd4a0,0xea50,0x6a95,0x5adf,0x2b60,0x86e3,0x92ef,0xc8d7,0xc95f,
+0xd4a0,0xd8a6,0xb55f,0x56a0,0xa5b4,0x25df,0x92d0,0xd2b2,0xa950,0xb557,
+0x6ca0,0xb550,0x5355,0x4daf,0xa5b0,0x4573,0x52bf,0xa9a8,0xe950,0x6aa0,
+0xaea6,0xab50,0x4b60,0xaae4,0xa570,0x5260,0xf263,0xd950,0x5b57,0x56a0,
+0x96d0,0x4dd5,0x4ad0,0xa4d0,0xd4d4,0xd250,0xd558,0xb540,0xb6a0,0x95a6,
+0x95bf,0x49b0,0xa974,0xa4b0,0xb27a,0x6a50,0x6d40,0xaf46,0xab60,0x9570,
+0x4af5,0x4970,0x64b0,0x74a3,0xea50,0x6b58,0x5ac0,0xab60,0x96d5,0x92e0,
+0xc960,0xd954,0xd4a0,0xda50,0x7552,0x56a0,0xabb7,0x25d0,0x92d0,0xcab5,
+0xa950,0xb4a0,0xbaa4,0xad50,0x55d9,0x4ba0,0xa5b0,0x5176,0x52bf,0xa930,
+0x7954,0x6aa0,0xad50,0x5b52,0x4b60,0xa6e6,0xa4e0,0xd260,0xea65,0xd530,
+0x5aa0,0x76a3,0x96d0,0x4afb,0x4ad0,0xa4d0,0xd0b6,0xd25f,0xd520,0xdd45,
+0xb5a0,0x56d0,0x55b2,0x49b0,0xa577,0xa4b0,0xaa50,0xb255,0x6d2f,0xada0,
+0x4b63,0x937f,0x49f8,0x4970,0x64b0,0x68a6,0xea5f,0x6b20,0xa6c4,0xaaef,
+0x92e0,0xd2e3,0xc960,0xd557,0xd4a0,0xda50,0x5d55,0x56a0,0xa6d0,0x55d4,
+0x52d0,0xa9b8,0xa950,0xb4a0,0xb6a6,0xad50,0x55a0,0xaba4,0xa5b0,0x52b0,
+0xb273,0x6930,0x7337,0x6aa0,0xad50,0x4b55,0x4b6f,0xa570,0x54e4,0xd260,
+0xe968,0xd520,0xdaa0,0x6aa6,0x56df,0x4ae0,0xa9d4,0xa4d0,0xd150,0xf252,
+0xd520
+];
+  const solarMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const solarTermBase = [4,19,3,18,4,19,4,19,4,20,4,20,6,22,6,22,6,22,7,22,6,21,6,21];
+  const solarTermIdx = "0123415341536789:;<9:=<>:=1>?012@015@015@015AB78CDE8CD=1FD01GH01GH01IH01IJ0KLMN;LMBEOPDQRST0RUH0RVH0RWH0RWM0XYMNZ[MB\]PT^_ST`_WH`_WH`_WM`_WM`aYMbc[Mde]Sfe]gfh_gih_Wih_WjhaWjka[jkl[jmn]ope]qph_qrh_sth_W";
+  const solarTermOS = "211122112122112121222211221122122222212222222221222122222232222222222222222233223232223232222222322222112122112121222211222122222222222222222222322222112122112121222111211122122222212221222221221122122222222222222222222223222232222232222222222222112122112121122111211122122122212221222221221122122222222222222221211122112122212221222211222122222232222232222222222222112122112121111111222222112121112121111111222222111121112121111111211122112122112121122111222212111121111121111111111122112122112121122111211122112122212221222221222211111121111121111111222111111121111111111111111122112121112121111111222111111111111111111111111122111121112121111111221122122222212221222221222111011111111111111111111122111121111121111111211122112122112121122211221111011111101111111111111112111121111121111111211122112122112221222211221111011111101111111110111111111121111111111111111122112121112121122111111011111121111111111111111011111111112111111111111011111111111111111111221111011111101110111110111011011111111111111111221111011011101110111110111011011111101111111111211111001011101110111110110011011111101111111111211111001011001010111110110011011111101111111110211111001011001010111100110011011011101110111110211111001011001010011100110011001011101110111110211111001010001010011000100011001011001010111110111111001010001010011000111111111111111111111111100011001011001010111100111111001010001010000000111111000010000010000000100011001011001010011100110011001011001110111110100011001010001010011000110011001011001010111110111100000010000000000000000011001010001010011000111100000000000000000000000011001010001010000000111000000000000000000000000011001010000010000000";
+
+  const els = {
+    inputModeBar: document.getElementById("inputModeBar"),
+    manualPane: document.getElementById("manualPane"),
+    solarPane: document.getElementById("solarPane"),
+    lunarPane: document.getElementById("lunarPane"),
+    gender: document.getElementById("gender"),
+    divinationBranch: document.getElementById("divinationBranch"),
+    yearStem: document.getElementById("yearStem"),
+    yearBranch: document.getElementById("yearBranch"),
+    monthStem: document.getElementById("monthStem"),
+    monthBranch: document.getElementById("monthBranch"),
+    dayStem: document.getElementById("dayStem"),
+    dayBranch: document.getElementById("dayBranch"),
+    hourStem: document.getElementById("hourStem"),
+    hourBranch: document.getElementById("hourBranch"),
+    solarGender: document.getElementById("solarGender"),
+    solarDivinationBranch: document.getElementById("solarDivinationBranch"),
+    solarDate: document.getElementById("solarDate"),
+    solarTime: document.getElementById("solarTime"),
+    lunarGender: document.getElementById("lunarGender"),
+    lunarDivinationBranch: document.getElementById("lunarDivinationBranch"),
+    lunarYear: document.getElementById("lunarYear"),
+    lunarMonth: document.getElementById("lunarMonth"),
+    lunarDay: document.getElementById("lunarDay"),
+    lunarLeap: document.getElementById("lunarLeap"),
+    lunarTime: document.getElementById("lunarTime"),
+    lunarToSolarPreview: document.getElementById("lunarToSolarPreview"),
+    calcBtn: document.getElementById("calcBtn"),
+    recalcBtn: document.getElementById("recalcBtn"),
+    resetBtn: document.getElementById("resetBtn"),
+    fillFromSolar: document.getElementById("fillFromSolar"),
+    fillFromLunar: document.getElementById("fillFromLunar"),
+    plateCanvas: document.getElementById("plateCanvas"),
+    summaryMonthGeneral: document.getElementById("summaryMonthGeneral"),
+    summaryNoble: document.getElementById("summaryNoble"),
+    summaryDayNight: document.getElementById("summaryDayNight"),
+    summaryDirection: document.getElementById("summaryDirection"),
+    resultText: document.getElementById("resultText"),
+    noteInput: document.getElementById("noteInput"),
+    copyBtn: document.getElementById("copyBtn"),
+    imageBtn: document.getElementById("imageBtn"),
+    saveRecordBtn: document.getElementById("saveRecordBtn"),
+    historyList: document.getElementById("historyList"),
+    clearHistoryBtn: document.getElementById("clearHistoryBtn"),
+    exportHistoryBtn: document.getElementById("exportHistoryBtn"),
+    toast: document.getElementById("toast")
+  };
+
+  const HISTORY_KEY = "skg_pan_history_v1";
+  let activeInputMode = "manual";
+  let latestResult = null;
+
+  function showToast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add("show");
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => els.toast.classList.remove("show"), 1800);
+  }
+
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function mod(n, m) {
+    return ((n % m) + m) % m;
+  }
+
+  function populateSelect(el, values, placeholder = "") {
+    el.innerHTML = "";
+    if (placeholder) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = placeholder;
+      el.appendChild(opt);
+    }
+    values.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.value ?? v;
+      opt.textContent = v.label ?? v;
+      el.appendChild(opt);
+    });
+  }
+
+  function getManualAllowedBranches(stem) {
+    if (!stem) return [...BRANCHES];
+    if (YANG_STEMS.has(stem)) return [...YANG_BRANCHES];
+    if (YIN_STEMS.has(stem)) return [...YIN_BRANCHES];
+    return [...BRANCHES];
+  }
+
+  function syncManualBranchOptions(stemEl, branchEl) {
+    const current = branchEl.value;
+    const allowed = getManualAllowedBranches(stemEl.value);
+    populateSelect(branchEl, allowed);
+    branchEl.value = allowed.includes(current) ? current : (allowed[0] || "");
+  }
+
+  function syncAllManualBranchOptions() {
+    syncManualBranchOptions(els.yearStem, els.yearBranch);
+    syncManualBranchOptions(els.monthStem, els.monthBranch);
+    syncManualBranchOptions(els.dayStem, els.dayBranch);
+    syncManualBranchOptions(els.hourStem, els.hourBranch);
+  }
+
+  function buildOptions() {
+    populateSelect(els.gender, [{value:"男",label:"男"} , {value:"女",label:"女"}]);
+    populateSelect(els.solarGender, [{value:"男",label:"男"} , {value:"女",label:"女"}]);
+    populateSelect(els.lunarGender, [{value:"男",label:"男"} , {value:"女",label:"女"}]);
+    [els.divinationBranch, els.solarDivinationBranch, els.lunarDivinationBranch, els.yearBranch, els.monthBranch, els.dayBranch, els.hourBranch]
+      .forEach(el => populateSelect(el, BRANCHES));
+    [els.yearStem, els.monthStem, els.dayStem, els.hourStem]
+      .forEach(el => populateSelect(el, STEMS));
+    const years = [];
+    for (let y = 1900; y <= 2100; y++) years.push(String(y));
+    populateSelect(els.lunarYear, years);
+    populateSelect(els.lunarMonth, Array.from({length:12}, (_,i)=>String(i+1)));
+    populateSelect(els.lunarDay, Array.from({length:30}, (_,i)=>String(i+1)));
+  }
+
+  function initDefaults() {
+    els.gender.value = "男";
+    els.solarGender.value = "男";
+    els.lunarGender.value = "男";
+    els.yearStem.value = "甲";
+    els.yearBranch.value = "子";
+    els.monthStem.value = "丙";
+    els.monthBranch.value = "寅";
+    els.dayStem.value = "甲";
+    els.dayBranch.value = "子";
+    els.hourStem.value = "甲";
+    els.hourBranch.value = "子";
+    els.divinationBranch.value = "子";
+    els.solarDivinationBranch.value = "子";
+    els.lunarDivinationBranch.value = "子";
+
+    const now = new Date();
+    els.solarDate.value = `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
+    els.solarTime.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    els.lunarTime.value = els.solarTime.value;
+    const branchNow = getHourBranchFrom24(now.getHours());
+    els.divinationBranch.value = branchNow;
+    els.solarDivinationBranch.value = branchNow;
+    els.lunarDivinationBranch.value = branchNow;
+    els.hourBranch.value = branchNow;
+    syncAllManualBranchOptions();
+
+    const lunarNow = new Lunar(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+    els.lunarYear.value = String(lunarNow.year);
+    els.lunarMonth.value = String(lunarNow.month);
+    els.lunarDay.value = String(lunarNow.day);
+    els.lunarLeap.value = lunarNow.isLeap ? "1" : "0";
+  }
+
+  function switchMode(mode) {
+    activeInputMode = mode;
+    [...els.inputModeBar.querySelectorAll("button")].forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+    els.manualPane.classList.toggle("hide", mode !== "manual");
+    els.solarPane.classList.toggle("hide", mode !== "solar");
+    els.lunarPane.classList.toggle("hide", mode !== "lunar");
+  }
+
+  function getSequenceFrom(start, source, len = 12) {
+    const idx = source.indexOf(start);
+    if (idx === -1) throw new Error(`序列中不存在：${start}`);
+    return Array.from({length: len}, (_, i) => source[(idx + i) % source.length]);
+  }
+
+  function buildCycleFromStem(stem, len = 12) {
+    const idx = STEMS.indexOf(stem);
+    if (idx === -1) throw new Error(`无效日干：${stem}`);
+    return Array.from({length: len}, (_, i) => STEMS[(idx + i) % STEMS.length]);
+  }
+
+  function placeByDirection(items, anchorIndex, direction) {
+    const placed = Array(12).fill("");
+    items.forEach((item, offset) => {
+      const idx = mod(anchorIndex + direction * offset, 12);
+      placed[idx] = item;
+    });
+    return placed;
+  }
+
+  function computeMonthGeneral(yearBranch, monthBranch, dayBranch, hourBranch) {
+    const total = BRANCH_VALUE_MAIN[yearBranch] + BRANCH_VALUE_MAIN[monthBranch] + BRANCH_VALUE_MAIN[dayBranch] + BRANCH_VALUE_HOUR[hourBranch];
+    const rem = total % 12 || 12;
+    return {
+      total,
+      rem,
+      branch: MONTH_GENERAL_MAP[rem],
+      name: MONTH_GENERAL_NAME[MONTH_GENERAL_MAP[rem]]
+    };
+  }
+
+  function computeNoble(dayStem, divinationBranch) {
+    const pair = NOBLE_MAP[dayStem];
+    if (!pair) throw new Error("日干贵人映射不存在");
+    const dayNight = DAY_TIME_BRANCHES.has(divinationBranch) ? "昼" : "夜";
+    return {
+      dayNight,
+      branch: dayNight === "昼" ? pair[0] : pair[1],
+      pair
+    };
+  }
+
+  function calculatePlate(inputs) {
+    const direction = inputs.gender === "男" ? 1 : -1;
+    const anchorIndex = PALACES.indexOf(inputs.divinationBranch);
+    if (anchorIndex === -1) throw new Error("占卜之时不在固定宫位中");
+    const mg = computeMonthGeneral(inputs.yearBranch, inputs.monthBranch, inputs.dayBranch, inputs.hourBranch);
+    const secondSeq = getSequenceFrom(mg.branch, BRANCHES, 12);
+    const secondLayer = placeByDirection(secondSeq, anchorIndex, direction);
+
+    const noble = computeNoble(inputs.dayStem, inputs.divinationBranch);
+    const nobleAnchor = secondLayer.indexOf(noble.branch);
+    const thirdLayer = placeByDirection(GENERALS, nobleAnchor, direction);
+
+    const fourthSeq = buildCycleFromStem(inputs.dayStem, 12);
+    const dayBranchAnchor = secondLayer.indexOf(inputs.dayBranch);
+    const fourthLayer = placeByDirection(fourthSeq, dayBranchAnchor, direction);
+
+    const cells = PALACES.map((palace, i) => ({
+      palace,
+      monthGeneralBranch: secondLayer[i],
+      general: thirdLayer[i],
+      stem: fourthLayer[i]
+    }));
+
+    return {
+      inputs,
+      direction,
+      directionText: direction === 1 ? "男顺排" : "女逆排",
+      monthGeneral: mg,
+      noble,
+      secondLayer,
+      thirdLayer,
+      fourthLayer,
+      cells
+    };
+  }
+
+  function renderPlate(result) {
+    els.plateCanvas.innerHTML = "";
+
+    function getRingCoordinates(margin) {
+      const span = 100 - margin * 2;
+      const q = span / 4;
+      return [
+        {x: margin + q, y: margin},
+        {x: margin + q * 2, y: margin},
+        {x: margin + q * 3, y: margin},
+        {x: 100 - margin, y: margin + q},
+        {x: 100 - margin, y: margin + q * 2},
+        {x: 100 - margin, y: margin + q * 3},
+        {x: margin + q * 3, y: 100 - margin},
+        {x: margin + q * 2, y: 100 - margin},
+        {x: margin + q, y: 100 - margin},
+        {x: margin, y: margin + q * 3},
+        {x: margin, y: margin + q * 2},
+        {x: margin, y: margin + q}
+      ];
+    }
+
+    const layers = [
+      {className: "ring-1", margin: 45, values: result.cells.map(c => c.palace)},
+      {className: "ring-2", margin: 35, values: result.cells.map(c => c.monthGeneralBranch || "—")},
+      {className: "ring-3", margin: 23, values: result.cells.map(c => c.general || "—")},
+      {className: "ring-4", margin: 9, values: result.cells.map(c => c.stem || "—")}
+    ];
+
+    layers.forEach(layer => {
+      const coords = getRingCoordinates(layer.margin);
+      layer.values.forEach((value, i) => {
+        const node = document.createElement("div");
+        node.className = `ring-char ${layer.className}`;
+        node.textContent = value;
+        node.style.left = `${coords[i].x}%`;
+        node.style.top = `${coords[i].y}%`;
+        els.plateCanvas.appendChild(node);
+      });
+    });
+
+    els.summaryMonthGeneral.textContent = `${result.monthGeneral.branch}·${result.monthGeneral.name}`;
+    els.summaryNoble.textContent = result.noble.branch;
+    els.summaryDayNight.textContent = result.noble.dayNight;
+    els.summaryDirection.textContent = result.direction === 1 ? "顺排" : "逆排";
+  }
+
+  function buildResultText(result) {
+    const lines = [];
+    const p = result.inputs;
+    lines.push(`性别：${p.gender}`);
+    lines.push(`四柱：${p.yearStem}${p.yearBranch} / ${p.monthStem}${p.monthBranch} / ${p.dayStem}${p.dayBranch} / ${p.hourStem}${p.hourBranch}`);
+    lines.push(`占卜之时：${p.divinationBranch}`);
+    if (p.convertedFrom) lines.push(`辅助换算：${p.convertedFrom}`);
+    lines.push("");
+    lines.push(`月将：${result.monthGeneral.branch}（${result.monthGeneral.name}）`);
+    lines.push(`四支合数：${result.monthGeneral.total}，对12取余：${result.monthGeneral.rem}`);
+    lines.push(`贵人候选：${result.noble.pair.join(" / ")}，${result.noble.dayNight}取：${result.noble.branch}`);
+    lines.push(`方向：${result.directionText}`);
+    lines.push("");
+    lines.push("十二宫：");
+    result.cells.forEach(cell => {
+      lines.push(`${cell.palace}宫｜月将地支：${cell.monthGeneralBranch}｜天将：${cell.general}｜天干：${cell.stem}`);
+    });
+    return lines.join("\n");
+  }
+
+  function collectManualInputs() {
+    return {
+      gender: els.gender.value,
+      yearStem: els.yearStem.value,
+      yearBranch: els.yearBranch.value,
+      monthStem: els.monthStem.value,
+      monthBranch: els.monthBranch.value,
+      dayStem: els.dayStem.value,
+      dayBranch: els.dayBranch.value,
+      hourStem: els.hourStem.value,
+      hourBranch: els.hourBranch.value,
+      divinationBranch: els.divinationBranch.value
+    };
+  }
+
+  function validateInputs(input) {
+    const required = ["gender","yearStem","yearBranch","monthStem","monthBranch","dayStem","dayBranch","hourStem","hourBranch","divinationBranch"];
+    for (const key of required) {
+      if (!input[key]) throw new Error("请先完整填写全部输入项");
+    }
+  }
+
+  function runCalculation() {
+    try {
+      const input = collectManualInputs();
+      validateInputs(input);
+      latestResult = calculatePlate(input);
+      renderPlate(latestResult);
+      els.resultText.textContent = buildResultText(latestResult);
+      showToast("排盘完成");
+    } catch (err) {
+      showToast(err.message || "排盘失败");
+    }
+  }
+
+  function applyConvertedPillars(payload, extraText = "") {
+    els.gender.value = payload.gender;
+    els.divinationBranch.value = payload.divinationBranch;
+    els.yearStem.value = payload.yearStem;
+    els.yearBranch.value = payload.yearBranch;
+    els.monthStem.value = payload.monthStem;
+    els.monthBranch.value = payload.monthBranch;
+    els.dayStem.value = payload.dayStem;
+    els.dayBranch.value = payload.dayBranch;
+    els.hourStem.value = payload.hourStem;
+    els.hourBranch.value = payload.hourBranch;
+    syncAllManualBranchOptions();
+    els.yearBranch.value = payload.yearBranch;
+    els.monthBranch.value = payload.monthBranch;
+    els.dayBranch.value = payload.dayBranch;
+    els.hourBranch.value = payload.hourBranch;
+
+    latestResult = calculatePlate({...payload, convertedFrom: extraText});
+    renderPlate(latestResult);
+    els.resultText.textContent = buildResultText(latestResult);
+    switchMode("manual");
+    showToast("已回填四柱并完成排盘");
+  }
+
+  function lYearDays(y) {
+    let sum = 348;
+    for (let i = 0x8000; i > 0x8; i >>= 1) sum += (lunarInfo[y - 1900] & i) ? 1 : 0;
+    return sum + leapDays(y);
+  }
+
+  function leapDays(y) {
+    if (leapMonth(y)) return (lunarInfo[y - 1899] & 0xf) === 0xf ? 30 : 29;
+    return 0;
+  }
+
+  function leapMonth(y) {
+    const lm = lunarInfo[y - 1900] & 0xf;
+    return lm === 0xf ? 0 : lm;
+  }
+
+  function monthDays(y, m) {
+    return (lunarInfo[y - 1900] & (0x10000 >> m)) ? 30 : 29;
+  }
+
+  function Lunar(objDate) {
+    let i;
+    let leap = 0;
+    let temp = 0;
+    let offset = (Date.UTC(objDate.getFullYear(), objDate.getMonth(), objDate.getDate()) - Date.UTC(1900, 0, 31)) / 86400000;
+    for (i = 1900; i < 2101 && offset > 0; i++) {
+      temp = lYearDays(i);
+      offset -= temp;
+    }
+    if (offset < 0) {
+      offset += temp;
+      i--;
+    }
+    this.year = i;
+    leap = leapMonth(i);
+    this.isLeap = false;
+    for (i = 1; i < 13 && offset > 0; i++) {
+      if (leap > 0 && i === (leap + 1) && this.isLeap === false) {
+        --i;
+        this.isLeap = true;
+        temp = leapDays(this.year);
+      } else {
+        temp = monthDays(this.year, i);
+      }
+      if (this.isLeap === true && i === (leap + 1)) this.isLeap = false;
+      offset -= temp;
+    }
+    if (offset === 0 && leap > 0 && i === leap + 1) {
+      if (this.isLeap) this.isLeap = false;
+      else {
+        this.isLeap = true;
+        --i;
+      }
+    }
+    if (offset < 0) {
+      offset += temp;
+      --i;
+    }
+    this.month = i;
+    this.day = offset + 1;
+  }
+
+  function cyclical(num) {
+    return STEMS[num % 10] + BRANCHES[num % 12];
+  }
+
+  function sTerm(y, n) {
+    return solarTermBase[n] + Math.floor(Number(solarTermOS.charAt((solarTermIdx.charCodeAt(y - 1900) - 48) * 24 + n)));
+  }
+
+  function getSolarGanzhi(date) {
+    const y = date.getFullYear();
+    const m = date.getMonth();
+    const d = date.getDate();
+
+    let cY = m < 2 ? cyclical(y - 1900 + 35) : cyclical(y - 1900 + 36);
+    const term2 = sTerm(y, 2);
+    if (m === 1 && d >= term2) cY = cyclical(y - 1900 + 36);
+
+    const firstNode = sTerm(y, m * 2);
+    let cM = cyclical((y - 1900) * 12 + m + 12);
+    if (d >= firstNode) cM = cyclical((y - 1900) * 12 + m + 13);
+
+    const dayCyclical = Date.UTC(y, m, d, 0, 0, 0, 0) / 86400000 + 25567 + 10;
+    const cD = cyclical(dayCyclical);
+
+    return { year: cY, month: cM, day: cD };
+  }
+
+  function getHourBranchFrom24(hour) {
+    if (hour === 23 || hour === 0) return "子";
+    if (hour === 1 || hour === 2) return "丑";
+    if (hour === 3 || hour === 4) return "寅";
+    if (hour === 5 || hour === 6) return "卯";
+    if (hour === 7 || hour === 8) return "辰";
+    if (hour === 9 || hour === 10) return "巳";
+    if (hour === 11 || hour === 12) return "午";
+    if (hour === 13 || hour === 14) return "未";
+    if (hour === 15 || hour === 16) return "申";
+    if (hour === 17 || hour === 18) return "酉";
+    if (hour === 19 || hour === 20) return "戌";
+    return "亥";
+  }
+
+  function getHourStem(dayStem, hourBranch) {
+    const base = {
+      "甲":0,"己":0,
+      "乙":2,"庚":2,
+      "丙":4,"辛":4,
+      "丁":6,"壬":6,
+      "戊":8,"癸":8
+    }[dayStem];
+    const hourIndex = BRANCHES.indexOf(hourBranch);
+    return STEMS[(base + hourIndex) % 10];
+  }
+
+  function parseDateTime(dateStr, timeStr) {
+    if (!dateStr) throw new Error("请先选择日期");
+    const [y,m,d] = dateStr.split("-").map(Number);
+    const [hh,mm] = (timeStr || "12:00").split(":").map(Number);
+    return new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+  }
+
+  function convertSolarToPillars(date, gender, divinationBranch) {
+    const lunar = new Lunar(date);
+    const gz = getSolarGanzhi(date);
+    const hourBranch = getHourBranchFrom24(date.getHours());
+    const hourStem = getHourStem(gz.day[0], hourBranch);
+    return {
+      gender,
+      divinationBranch,
+      yearStem: gz.year[0],
+      yearBranch: gz.year[1],
+      monthStem: gz.month[0],
+      monthBranch: gz.month[1],
+      dayStem: gz.day[0],
+      dayBranch: gz.day[1],
+      hourStem,
+      hourBranch,
+      solarText: `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`,
+      lunarText: `农历${lunar.year}年${lunar.isLeap ? "闰" : ""}${lunar.month}月${lunar.day}日`
+    };
+  }
+
+  function lunarToSolar(y, m, d, isLeap) {
+    if (y < 1900 || y > 2100) throw new Error("农历年份仅支持 1900-2100");
+    const lm = leapMonth(y);
+    if (isLeap && lm !== m) throw new Error(`该年无闰${m}月`);
+    const max = isLeap ? leapDays(y) : monthDays(y, m);
+    if (d < 1 || d > max) throw new Error(`该农历日期超出范围，最大为${max}日`);
+
+    let offset = 0;
+    for (let i = 1900; i < y; i++) offset += lYearDays(i);
+    for (let i = 1; i < m; i++) {
+      offset += monthDays(y, i);
+      if (lm && i === lm) offset += leapDays(y);
+    }
+    if (isLeap) offset += monthDays(y, m);
+    offset += d - 1;
+
+    const base = Date.UTC(1900, 0, 31);
+    const res = new Date(base + offset * 86400000);
+    return new Date(res.getUTCFullYear(), res.getUTCMonth(), res.getUTCDate(), 0, 0, 0, 0);
+  }
+
+  function onFillFromSolar() {
+    try {
+      const date = parseDateTime(els.solarDate.value, els.solarTime.value);
+      const payload = convertSolarToPillars(date, els.solarGender.value, els.solarDivinationBranch.value);
+      applyConvertedPillars(payload, `公历${payload.solarText}；${payload.lunarText}`);
+    } catch (err) {
+      showToast(err.message || "公历换算失败");
+    }
+  }
+
+  function onFillFromLunar() {
+    try {
+      const y = Number(els.lunarYear.value);
+      const m = Number(els.lunarMonth.value);
+      const d = Number(els.lunarDay.value);
+      const isLeap = els.lunarLeap.value === "1";
+      const [hh, mm] = (els.lunarTime.value || "12:00").split(":").map(Number);
+      const solarDate = lunarToSolar(y, m, d, isLeap);
+      solarDate.setHours(hh || 0, mm || 0, 0, 0);
+      els.lunarToSolarPreview.value = `${solarDate.getFullYear()}-${pad2(solarDate.getMonth()+1)}-${pad2(solarDate.getDate())}`;
+      const payload = convertSolarToPillars(solarDate, els.lunarGender.value, els.lunarDivinationBranch.value);
+      applyConvertedPillars(payload, `农历${y}年${isLeap ? "闰" : ""}${m}月${d}日，换算公历${payload.solarText}`);
+    } catch (err) {
+      showToast(err.message || "农历换算失败");
+    }
+  }
+
+  function doReset() {
+    initDefaults();
+    latestResult = null;
+    els.noteInput.value = "";
+    els.lunarToSolarPreview.value = "";
+    els.resultText.textContent = "请先输入信息后点击“一键排盘”。";
+    els.summaryMonthGeneral.textContent = "—";
+    els.summaryNoble.textContent = "—";
+    els.summaryDayNight.textContent = "—";
+    els.summaryDirection.textContent = "—";
+    renderEmptyPlate();
+    showToast("已重置");
+  }
+
+  function renderEmptyPlate() {
+    const empty = {
+      monthGeneral: {branch:"—", name:"—"},
+      noble: {branch:"—", dayNight:"—"},
+      inputs: {dayStem:"—", dayBranch:"—", divinationBranch:"—"},
+      direction: 1,
+      directionText: "—",
+      cells: PALACES.map(p => ({ palace:p, monthGeneralBranch:"", general:"", stem:"" }))
+    };
+    renderPlate(empty);
+  }
+
+  async function copyText() {
+    const text = els.resultText.textContent.trim();
+    if (!text || text.startsWith("请先输入")) return showToast("暂无可复制内容");
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("已复制到剪贴板");
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      showToast("已复制到剪贴板");
+    }
+  }
+
+  async function savePlateImage() {
+    try {
+      const node = document.getElementById("plateCard");
+      const rect = node.getBoundingClientRect();
+      const width = Math.ceil(rect.width);
+      const height = Math.ceil(rect.height);
+      const styles = [...document.querySelectorAll("style")].map(s => s.textContent).join("\n");
+      const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+  <foreignObject width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>${styles.replace(/<\/style>/g, "<\\/style>")}</style>
+      <div style="width:${width}px;height:${height}px;overflow:hidden;background:#f5f1e8;">${node.outerHTML}</div>
+    </div>
+  </foreignObject>
+</svg>`;
+      const url = URL.createObjectURL(new Blob([svg], {type: "image/svg+xml;charset=utf-8"}));
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width * 2;
+        canvas.height = height * 2;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(2, 2);
+        ctx.fillStyle = "#f5f1e8";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(blob => {
+          if (!blob) return showToast("导出图片失败");
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `时空卦排盘_${Date.now()}.png`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+          showToast("图片已导出");
+        }, "image/png");
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        showToast("当前浏览器不支持该导出方式");
+      };
+      img.src = url;
+    } catch (err) {
+      showToast(err.message || "导出图片失败");
+    }
+  }
+
+  function loadHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory(list) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  }
+
+  function saveCurrentRecord() {
+    if (!latestResult) return showToast("请先排盘后再保存");
+    const list = loadHistory();
+    list.unshift({
+      id: String(Date.now()),
+      createdAt: new Date().toISOString(),
+      title: `${latestResult.inputs.yearStem}${latestResult.inputs.yearBranch} / ${latestResult.inputs.monthStem}${latestResult.inputs.monthBranch} / ${latestResult.inputs.dayStem}${latestResult.inputs.dayBranch} / ${latestResult.inputs.hourStem}${latestResult.inputs.hourBranch}`,
+      note: els.noteInput.value.trim(),
+      text: els.resultText.textContent
+    });
+    saveHistory(list);
+    renderHistory();
+    showToast("记录已保存到本地");
+  }
+
+  function renderHistory() {
+    const list = loadHistory();
+    if (!list.length) {
+      els.historyList.innerHTML = `<div class="empty">暂无本地记录。</div>`;
+      return;
+    }
+    els.historyList.innerHTML = "";
+    list.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      const dt = new Date(item.createdAt);
+      div.innerHTML = `
+        <div class="history-top">
+          <div>
+            <div class="history-title">${item.title}</div>
+            <div class="history-time">${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())} ${pad2(dt.getHours())}:${pad2(dt.getMinutes())}</div>
+          </div>
+        </div>
+        ${item.note ? `<div class="history-note">${escapeHtml(item.note)}</div>` : ""}
+        <div class="history-text">${escapeHtml(item.text)}</div>
+        <div class="history-actions">
+          <button type="button" class="btn soft" data-action="copy" data-id="${item.id}">复制</button>
+          <button type="button" class="btn danger" data-action="delete" data-id="${item.id}">删除</button>
+        </div>
+      `;
+      els.historyList.appendChild(div);
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function deleteHistoryItem(id) {
+    const list = loadHistory().filter(item => item.id !== id);
+    saveHistory(list);
+    renderHistory();
+    showToast("已删除");
+  }
+
+  async function copyHistoryText(id) {
+    const item = loadHistory().find(x => x.id === id);
+    if (!item) return;
+    try {
+      await navigator.clipboard.writeText(item.text);
+      showToast("记录已复制");
+    } catch {
+      showToast("复制失败");
+    }
+  }
+
+  function clearHistory() {
+    if (!confirm("确认清空全部本地记录吗？")) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+    showToast("记录已清空");
+  }
+
+  async function exportHistoryText() {
+    const list = loadHistory();
+    if (!list.length) return showToast("暂无可导出的记录");
+    const text = list.map((item, idx) => [
+      `# 记录${idx+1}`,
+      `时间：${item.createdAt}`,
+      item.note ? `备注：${item.note}` : "",
+      item.text,
+      ""
+    ].filter(Boolean).join("\n")).join("\n");
+    const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `时空卦本地记录_${Date.now()}.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("记录文本已导出");
+  }
+
+  function bindEvents() {
+    els.inputModeBar.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-mode]");
+      if (!btn) return;
+      switchMode(btn.dataset.mode);
+    });
+    els.calcBtn.addEventListener("click", runCalculation);
+    els.recalcBtn.addEventListener("click", runCalculation);
+    els.resetBtn.addEventListener("click", doReset);
+    els.fillFromSolar.addEventListener("click", onFillFromSolar);
+    els.fillFromLunar.addEventListener("click", onFillFromLunar);
+    [
+      [els.yearStem, els.yearBranch],
+      [els.monthStem, els.monthBranch],
+      [els.dayStem, els.dayBranch],
+      [els.hourStem, els.hourBranch]
+    ].forEach(([stemEl, branchEl]) => {
+      stemEl.addEventListener("change", () => syncManualBranchOptions(stemEl, branchEl));
+    });
+    els.copyBtn.addEventListener("click", copyText);
+    els.imageBtn.addEventListener("click", savePlateImage);
+    els.saveRecordBtn.addEventListener("click", saveCurrentRecord);
+    els.clearHistoryBtn.addEventListener("click", clearHistory);
+    els.exportHistoryBtn.addEventListener("click", exportHistoryText);
+    els.historyList.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.dataset.action === "delete") deleteHistoryItem(id);
+      if (btn.dataset.action === "copy") copyHistoryText(id);
+    });
+  }
+
+  buildOptions();
+  initDefaults();
+  bindEvents();
+  renderEmptyPlate();
+  renderHistory();
+  onFillFromSolar();
+})();
+</script>
+</body>
 </html>
