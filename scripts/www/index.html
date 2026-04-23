@@ -1,11 +1,1040 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>时空卦</title>
+  <style>
+    :root {
+      --bg: #eef3f9;
+      --panel: rgba(255,255,255,0.88);
+      --panel-2: rgba(244,248,253,0.9);
+      --text: #1f2f46;
+      --muted: #6d7f97;
+      --line: #b8c7db;
+      --primary: #5f7faa;
+      --primary-2: #7f9ec6;
+      --accent: #d9c08c;
+      --shadow: 0 12px 30px rgba(59, 84, 120, 0.15);
+      --ok: #2e6f60;
+      --warn: #835a16;
+    }
+    * { box-sizing: border-box; }
+    html {
+      width: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    body {
+      margin: 0;
+      width: 100%;
+      overflow-x: hidden;
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(133, 160, 202, 0.28), transparent 20%),
+        linear-gradient(180deg, #f5f8fc 0%, #eef3f9 45%, #e8eef7 100%);
+      min-height: 100vh;
+      overscroll-behavior-x: none;
+    }
+    .wrap {
+      width: min(1340px, calc(100% - 28px));
+      max-width: 100%;
+      margin: 20px auto 40px;
+    }
+    .hero {
+      border: 1px solid rgba(149,171,201,0.45);
+      background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(247,250,255,0.93));
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero:before, .hero:after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(123, 152, 194, 0.11);
+      filter: blur(2px);
+      pointer-events: none;
+    }
+    .hero:before { width: 240px; height: 240px; right: -60px; top: -100px; }
+    .hero:after { width: 180px; height: 180px; left: -40px; bottom: -80px; }
+    .title {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .title h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .badge {
+      border: 1px solid rgba(111,139,180,0.35);
+      background: rgba(95,127,170,0.10);
+      color: var(--primary);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 430px minmax(0,1fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(153,174,201,0.42);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(8px);
+    }
+    .panel h2, .panel h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+    }
+    .full { grid-column: 1 / -1; }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      border: 1px solid rgba(152,176,208,0.6);
+      background: rgba(255,255,255,0.94);
+      border-radius: 14px;
+      padding: 12px 13px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(95,127,170,0.9);
+      box-shadow: 0 0 0 3px rgba(95,127,170,0.12);
+    }
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+    .pillar-block {
+      border: 1px solid rgba(153,174,201,0.4);
+      background: linear-gradient(180deg, rgba(248,251,255,0.95), rgba(255,255,255,0.95));
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .pillar-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+    .pillar-title strong {
+      font-size: 15px;
+    }
+    .mini {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pillar-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+    .info-card {
+      border: 1px solid rgba(153,174,201,0.42);
+      background: linear-gradient(180deg, rgba(247,250,255,0.96), rgba(255,255,255,0.94));
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    button {
+      cursor: pointer;
+      transition: .18s ease;
+      font-weight: 600;
+      min-height: 46px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary {
+      background: linear-gradient(180deg, var(--primary-2), var(--primary));
+      color: white;
+      border-color: rgba(95,127,170,0.95);
+      box-shadow: 0 10px 20px rgba(95,127,170,0.20);
+    }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.92);
+    }
+    .note {
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--muted);
+      background: rgba(248,251,255,0.88);
+      border: 1px dashed rgba(149,171,201,0.55);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .output {
+      display: grid;
+      gap: 16px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 12px;
+    }
+    .summary-card {
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(241,247,254,0.92), rgba(255,255,255,0.95));
+      border: 1px solid rgba(153,174,201,0.42);
+      padding: 14px;
+      min-height: 102px;
+    }
+    .summary-card .k {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .summary-card .v {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .summary-card .s {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .board-shell {
+      background: linear-gradient(180deg, rgba(248,251,255,0.96), rgba(242,247,253,0.94));
+      border: 1px solid rgba(153,174,201,0.42);
+      border-radius: 26px;
+      padding: 18px;
+    }
+    .board-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      justify-items: center;
+      width: 100%;
+      overflow: hidden;
+      padding: 8px 0 2px;
+    }
+    .square-board {
+      position: relative;
+      width: min(800px, 100%);
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+      min-width: 0;
+      margin: 8px auto 10px;
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.85), rgba(244,248,253,0.78)),
+        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(241,247,254,0.82));
+    }
+    .square-layer {
+      position: absolute;
+      border: 2px solid rgba(199, 171, 118, 0.66);
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.42);
+    }
+    .square-layer.l4 { inset: 6%; }
+    .square-layer.l3 { inset: 18%; }
+    .square-layer.l2 { inset: 30%; }
+    .square-layer.l1 { inset: 42%; }
+    .node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-width: 48px;
+      min-height: 34px;
+      pointer-events: none;
+    }
+    .node .big {
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 1em;
+    }
+    .node .small {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.25;
+      min-height: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .node.l1 .big { color: #1d2738; font-size: clamp(18px, 2.2vw, 24px); }
+    .node.l2 .big { color: #24557b; font-size: clamp(18px, 2.4vw, 28px); }
+    .node.l3 .big { color: #6a3b6f; font-size: clamp(18px, 2.5vw, 29px); }
+    .node.l4 .big { color: #6b4d16; font-size: clamp(18px, 2.6vw, 30px); }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+    }
+    .legend-card {
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(247,250,255,0.96));
+      border: 1px solid rgba(153,174,201,0.42);
+      padding: 14px;
+    }
+    .legend-card h4 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+    .legend-card .body {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #33455d;
+      white-space: pre-wrap;
+    }
+    .formula {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .formula code {
+      background: rgba(95,127,170,0.10);
+      border: 1px solid rgba(153,174,201,0.4);
+      padding: 6px 10px;
+      border-radius: 10px;
+      color: #35506f;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .warning {
+      border-left: 4px solid #caa65b;
+      padding-left: 10px;
+      color: #4d5f77;
+      font-size: 13px;
+      line-height: 1.8;
+      margin-top: 10px;
+    }
+    @media (max-width: 1160px) {
+      .grid { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 920px) {
+      .wrap {
+        width: calc(100% - 20px);
+        margin: 10px auto 24px;
+      }
+      .hero {
+        padding: 18px;
+      }
+      .panel,
+      .board-shell,
+      .summary-card,
+      .pillar-block,
+      .info-card,
+      .legend-card {
+        border-radius: 18px;
+      }
+      .title h1 {
+        font-size: 26px;
+      }
+      .grid {
+        gap: 14px;
+      }
+      .panel {
+        padding: 16px;
+      }
+      .board-shell {
+        padding: 14px;
+      }
+      .square-board {
+        width: min(100%, 700px);
+        border-radius: 22px;
+      }
+      .node {
+        min-width: 42px;
+        min-height: 30px;
+      }
+    }
+    @media (max-width: 760px) {
+      .wrap {
+        width: calc(100% - 16px);
+        margin: 8px auto 20px;
+      }
+      .hero {
+        padding: 14px;
+        border-radius: 18px;
+      }
+      .hero:before,
+      .hero:after {
+        display: none;
+      }
+      .panel,
+      .board-shell {
+        padding: 14px;
+      }
+      .summary,
+      .legend,
+      .input-grid,
+      .pillar-grid,
+      .btn-row {
+        grid-template-columns: 1fr;
+      }
+      .title {
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .title h1 {
+        font-size: 24px;
+        letter-spacing: 0.5px;
+      }
+      .badge {
+        font-size: 12px;
+        padding: 7px 12px;
+      }
+      .panel h2,
+      .panel h3 {
+        font-size: 17px;
+        margin-bottom: 10px;
+      }
+      label {
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      input,
+      select,
+      button,
+      textarea {
+        font-size: 16px;
+        padding: 12px;
+        border-radius: 12px;
+      }
+      textarea {
+        min-height: 84px;
+      }
+      .pillar-block,
+      .info-card,
+      .summary-card,
+      .legend-card {
+        padding: 12px;
+      }
+      .pillar-title {
+        margin-bottom: 8px;
+        gap: 8px;
+      }
+      .pillar-title strong,
+      .legend-card h4 {
+        font-size: 14px;
+      }
+      .mini,
+      .note,
+      .summary-card .k,
+      .formula,
+      .warning {
+        font-size: 12px;
+      }
+      .summary-card {
+        min-height: auto;
+      }
+      .summary-card .v {
+        font-size: 20px;
+      }
+      .summary-card .s,
+      .legend-card .body {
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      .board-shell {
+        overflow: hidden;
+      }
+      .board-wrap {
+        padding-top: 4px;
+      }
+      .square-board {
+        width: 100%;
+        max-width: min(100vw - 44px, 520px);
+        border-radius: 18px;
+      }
+      .square-layer {
+        border-width: 1.5px;
+      }
+      .node {
+        min-width: 32px;
+        min-height: 24px;
+      }
+      .node .small {
+        font-size: 10px;
+        margin-top: 2px;
+        min-height: 12px;
+      }
+      .node.l1 .big { font-size: clamp(14px, 4.8vw, 20px); }
+      .node.l2 .big { font-size: clamp(14px, 5vw, 22px); }
+      .node.l3 .big { font-size: clamp(14px, 5.1vw, 23px); }
+      .node.l4 .big { font-size: clamp(14px, 5.2vw, 24px); }
+      .btn-primary:hover {
+        transform: none;
+      }
+    }
+    @media (max-width: 480px) {
+      .wrap {
+        width: calc(100% - 12px);
+      }
+      .hero,
+      .panel,
+      .board-shell {
+        border-radius: 16px;
+      }
+      .hero,
+      .panel,
+      .board-shell {
+        padding: 12px;
+      }
+      .title h1 {
+        font-size: 22px;
+      }
+      .square-board {
+        max-width: min(100vw - 32px, 420px);
+      }
+      .node {
+        min-width: 28px;
+        min-height: 22px;
+      }
+      .node .small {
+        font-size: 9px;
+      }
+      .node.l1 .big { font-size: clamp(12px, 4.6vw, 18px); }
+      .node.l2 .big { font-size: clamp(12px, 4.7vw, 19px); }
+      .node.l3 .big { font-size: clamp(12px, 4.8vw, 20px); }
+      .node.l4 .big { font-size: clamp(12px, 4.9vw, 20px); }
+    }
+    @media (max-width: 760px) and (orientation: landscape) {
+      .wrap {
+        width: calc(100% - 20px);
+      }
+      .square-board {
+        max-width: min(62vh, 520px);
+      }
+    }
+    @media (max-width: 760px) {
+      .panel,
+      .hero {
+        box-shadow: 0 8px 18px rgba(59, 84, 120, 0.10);
+        backdrop-filter: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="title">
+        <div>
+          <h1>时空卦</h1>
+        </div>
+      </div>
+
+      <div class="grid">
+        <aside class="panel">
+          <div class="stack">
+            <section>
+              <h2>排盘输入</h2>
+              <div class="input-grid">
+                <div>
+                  <label for="gender">性别</label>
+                  <select id="gender">
+                    <option value="男">男命</option>
+                    <option value="女">女命</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section class="pillar-block">
+              <div class="pillar-title">
+                <strong>四柱拆分输入区</strong>
+                <span class="mini">仅保留 年 → 月 → 日 → 时 的天干 + 地支独立输入</span>
+              </div>
+
+              <div class="pillar-block">
+                <div class="pillar-title"><strong>年柱</strong><span class="mini">完整十天干 + 十二地支</span></div>
+                <div class="pillar-grid">
+                  <div>
+                    <label for="yearStem">年干</label>
+                    <select id="yearStem"></select>
+                  </div>
+                  <div>
+                    <label for="yearBranch">年支</label>
+                    <select id="yearBranch"></select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pillar-block">
+                <div class="pillar-title"><strong>月柱</strong><span class="mini">完整十天干 + 十二地支</span></div>
+                <div class="pillar-grid">
+                  <div>
+                    <label for="monthStem">月干</label>
+                    <select id="monthStem"></select>
+                  </div>
+                  <div>
+                    <label for="monthBranch">月支</label>
+                    <select id="monthBranch"></select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pillar-block">
+                <div class="pillar-title"><strong>日柱</strong><span class="mini">完整十天干 + 十二地支</span></div>
+                <div class="pillar-grid">
+                  <div>
+                    <label for="dayStem">日干</label>
+                    <select id="dayStem"></select>
+                  </div>
+                  <div>
+                    <label for="dayBranch">日支</label>
+                    <select id="dayBranch"></select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pillar-block">
+                <div class="pillar-title"><strong>时柱</strong><span class="mini">完整十天干 + 十二地支</span></div>
+                <div class="pillar-grid">
+                  <div>
+                    <label for="hourStem">时干</label>
+                    <select id="hourStem"></select>
+                  </div>
+                  <div>
+                    <label for="hourBranch">时支</label>
+                    <select id="hourBranch"></select>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="info-card">
+              <h3>占卜之时</h3>
+              <div class="input-grid">
+                <div class="full">
+                  <label for="divinationBranch">占卜之时（同时负责：月将落宫起点 + 昼夜贵人判定）</label>
+                  <select id="divinationBranch"></select>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <div class="btn-row">
+                <button class="btn-primary" id="runBtn">一键生成十二串宫</button>
+                <button class="btn-secondary" id="resetBtn">恢复默认</button>
+                <button class="btn-secondary" id="printBtn">导出/打印</button>
+              </div>
+            </section>
+          </div>
+        </aside>
+
+        <main class="output">
+          <section class="summary" id="summary"></section>
+
+          <section class="board-shell">
+            <div class="board-wrap">
+              <div class="square-board" id="board"></div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+    const BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    const YEAR_MONTH_DAY_BRANCH_ORDER = ["寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子", "丑"];
+    const HOUR_BRANCH_NUMBER_ORDER = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    const SPACE_TIME_PALACE_ORDER = ["巳", "午", "未", "申", "酉", "戌", "亥", "子", "丑", "寅", "卯", "辰"];
+    const MONTH_GENERAL_SEQUENCE = [
+      { number: 1, branch: "亥", name: "登明", monthLabel: "正月将" },
+      { number: 2, branch: "戌", name: "河魁", monthLabel: "二月将" },
+      { number: 3, branch: "酉", name: "从魁", monthLabel: "三月将" },
+      { number: 4, branch: "申", name: "传送", monthLabel: "四月将" },
+      { number: 5, branch: "未", name: "小吉", monthLabel: "五月将" },
+      { number: 6, branch: "午", name: "胜光", monthLabel: "六月将" },
+      { number: 7, branch: "巳", name: "太乙", monthLabel: "七月将" },
+      { number: 8, branch: "辰", name: "天罡", monthLabel: "八月将" },
+      { number: 9, branch: "卯", name: "太冲", monthLabel: "九月将" },
+      { number: 10, branch: "寅", name: "功曹", monthLabel: "十月将" },
+      { number: 11, branch: "丑", name: "大吉", monthLabel: "十一月将" },
+      { number: 12, branch: "子", name: "神后", monthLabel: "十二月将" },
+    ];
+    const GUIREN_BRANCHES_BY_DAY_STEM = {
+      "甲": ["丑", "未"],
+      "戊": ["丑", "未"],
+      "庚": ["丑", "未"],
+      "乙": ["子", "申"],
+      "己": ["子", "申"],
+      "丙": ["亥", "酉"],
+      "丁": ["亥", "酉"],
+      "壬": ["巳", "卯"],
+      "癸": ["巳", "卯"],
+      "辛": ["午", "寅"],
+    };
+    const HEAVENLY_GENERAL_SHORT = ["贵", "蛇", "雀", "合", "勾", "龙", "空", "虎", "常", "玄", "阴", "后"];
+    const LAYER_INSET = { l4: 6, l3: 18, l2: 30, l1: 42 };
+
+    const EL = {
+      gender: document.getElementById('gender'),
+      yearStem: document.getElementById('yearStem'),
+      yearBranch: document.getElementById('yearBranch'),
+      monthStem: document.getElementById('monthStem'),
+      monthBranch: document.getElementById('monthBranch'),
+      dayStem: document.getElementById('dayStem'),
+      dayBranch: document.getElementById('dayBranch'),
+      hourStem: document.getElementById('hourStem'),
+      hourBranch: document.getElementById('hourBranch'),
+      divinationBranch: document.getElementById('divinationBranch'),
+      runBtn: document.getElementById('runBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      printBtn: document.getElementById('printBtn'),
+      summary: document.getElementById('summary'),
+      board: document.getElementById('board'),
+    };
+
+    function fillSelect(select, values, formatter = (value) => value) {
+      select.innerHTML = values.map(value => `<option value="${value}">${formatter(value)}</option>`).join('');
+    }
+
+    function fillBaseOptions() {
+      [EL.yearStem, EL.monthStem, EL.dayStem, EL.hourStem].forEach(select => fillSelect(select, STEMS));
+      [EL.yearBranch, EL.monthBranch, EL.dayBranch, EL.hourBranch, EL.divinationBranch].forEach(select => fillSelect(select, BRANCHES));
+    }
+
+    function resetDefaults() {
+      EL.gender.value = '男';
+      EL.yearStem.value = '癸';
+      EL.yearBranch.value = '巳';
+      EL.monthStem.value = '壬';
+      EL.monthBranch.value = '戌';
+      EL.dayStem.value = '戊';
+      EL.dayBranch.value = '午';
+      EL.hourStem.value = '戊';
+      EL.hourBranch.value = '辰';
+      EL.divinationBranch.value = getCurrentBeijingBranch().branch;
+      updateJudgeDisplay();
+      run();
+    }
+
+    function normalizeIndex(index, length) {
+      return ((index % length) + length) % length;
+    }
+
+    function getCycleSequence(source, startValue, total = source.length) {
+      const startIndex = source.indexOf(startValue);
+      if (startIndex < 0) return Array.from({ length: total }, (_, i) => source[i % source.length]);
+      return Array.from({ length: total }, (_, i) => source[(startIndex + i) % source.length]);
+    }
+
+    function getSpaceTimeBranchNumber(branch, order) {
+      const idx = order.indexOf(branch);
+      return idx >= 0 ? idx + 1 : 0;
+    }
+
+    function getInputState() {
+      return {
+        yearStem: EL.yearStem.value,
+        yearBranch: EL.yearBranch.value,
+        monthStem: EL.monthStem.value,
+        monthBranch: EL.monthBranch.value,
+        dayStem: EL.dayStem.value,
+        dayBranch: EL.dayBranch.value,
+        hourStem: EL.hourStem.value,
+        hourBranch: EL.hourBranch.value,
+        divinationBranch: EL.divinationBranch.value,
+      };
+    }
+    function getBeijingNow() {
+      const formatter = new Intl.DateTimeFormat('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+      const parts = Object.fromEntries(
+        formatter.formatToParts(new Date())
+          .filter(part => part.type !== 'literal')
+          .map(part => [part.type, part.value])
+      );
+      return {
+        year: parts.year,
+        month: parts.month,
+        day: parts.day,
+        hour: Number(parts.hour || 0),
+        minute: Number(parts.minute || 0),
+        second: Number(parts.second || 0),
+        timeText: `${parts.hour}:${parts.minute}:${parts.second}`,
+      };
+    }
+
+    function getBranchByHour(hour) {
+      if (hour >= 23 || hour < 1) return '子';
+      if (hour < 3) return '丑';
+      if (hour < 5) return '寅';
+      if (hour < 7) return '卯';
+      if (hour < 9) return '辰';
+      if (hour < 11) return '巳';
+      if (hour < 13) return '午';
+      if (hour < 15) return '未';
+      if (hour < 17) return '申';
+      if (hour < 19) return '酉';
+      if (hour < 21) return '戌';
+      return '亥';
+    }
+
+    function getCurrentBeijingBranch() {
+      const now = getBeijingNow();
+      return {
+        ...now,
+        branch: getBranchByHour(now.hour),
+      };
+    }
+
+    function getAutoDayNightByDivinationBranch(branch) {
+      const isDay = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申'].includes(branch);
+      return {
+        isDay,
+        label: isDay ? '白天 / 阳贵人' : '黑夜 / 阴贵人',
+        type: isDay ? '阳贵人' : '阴贵人',
+        mode: isDay ? 'day' : 'night',
+        branch,
+      };
+    }
+
+    function getFinalDayNightMode() {
+      const auto = getAutoDayNightByDivinationBranch(EL.divinationBranch.value);
+      return { ...auto, source: 'auto' };
+    }
+
+    function updateJudgeDisplay() {}
+
+    function getMonthGeneralDetail(inputs) {
+      const yearNumber = getSpaceTimeBranchNumber(inputs.yearBranch, YEAR_MONTH_DAY_BRANCH_ORDER);
+      const monthNumber = getSpaceTimeBranchNumber(inputs.monthBranch, YEAR_MONTH_DAY_BRANCH_ORDER);
+      const dayNumber = getSpaceTimeBranchNumber(inputs.dayBranch, YEAR_MONTH_DAY_BRANCH_ORDER);
+      const hourNumber = getSpaceTimeBranchNumber(inputs.hourBranch, HOUR_BRANCH_NUMBER_ORDER);
+      const sum = yearNumber + monthNumber + dayNumber + hourNumber;
+      const remainder = sum % 12;
+      const number = remainder === 0 ? 12 : remainder;
+      const detail = MONTH_GENERAL_SEQUENCE[number - 1];
+      return { ...detail, sum, remainder, yearNumber, monthNumber, dayNumber, hourNumber };
+    }
+
+    function getGuiRenDetail(inputs) {
+      const pair = GUIREN_BRANCHES_BY_DAY_STEM[inputs.dayStem] || ["丑", "未"];
+      const finalMode = getFinalDayNightMode();
+      return {
+        pair,
+        isDay: finalMode.isDay,
+        type: finalMode.type,
+        branch: finalMode.isDay ? pair[0] : pair[1],
+        source: finalMode.source,
+        timeLabel: finalMode.label,
+        divinationBranch: inputs.divinationBranch,
+      };
+    }
+
+    function buildDirectionalLayer(values, anchorBranch, direction, palaceOrder = SPACE_TIME_PALACE_ORDER) {
+      const out = Array.from({ length: palaceOrder.length }, () => '');
+      const anchorIndex = palaceOrder.indexOf(anchorBranch);
+      if (anchorIndex < 0) return out;
+      for (let step = 0; step < palaceOrder.length; step += 1) {
+        const palaceIndex = normalizeIndex(anchorIndex + direction * step, palaceOrder.length);
+        out[palaceIndex] = values[step % values.length];
+      }
+      return out;
+    }
+
+    function buildBoardData() {
+      const inputs = getInputState();
+      const direction = EL.gender.value === '女' ? -1 : 1;
+      const directionLabel = direction === 1 ? '顺时针' : '逆时针';
+      const monthGeneral = getMonthGeneralDetail(inputs);
+      const guiRen = getGuiRenDetail(inputs);
+      const secondLayerValues = getCycleSequence(BRANCHES, monthGeneral.branch, 12);
+      const secondLayer = buildDirectionalLayer(secondLayerValues, inputs.divinationBranch, direction, SPACE_TIME_PALACE_ORDER);
+      const guiRenPalaceIndex = secondLayer.findIndex(branch => branch === guiRen.branch);
+      const guiRenPalace = SPACE_TIME_PALACE_ORDER[guiRenPalaceIndex >= 0 ? guiRenPalaceIndex : 0];
+      const thirdLayer = buildDirectionalLayer(HEAVENLY_GENERAL_SHORT, guiRenPalace, direction, SPACE_TIME_PALACE_ORDER);
+      const fourthLayerValues = getCycleSequence(STEMS, inputs.dayStem, 12);
+      const dayBranchPalaceIndex = secondLayer.findIndex(branch => branch === inputs.dayBranch);
+      const dayStemAnchorPalace = SPACE_TIME_PALACE_ORDER[dayBranchPalaceIndex >= 0 ? dayBranchPalaceIndex : 0];
+      const fourthLayer = buildDirectionalLayer(fourthLayerValues, dayStemAnchorPalace, direction, SPACE_TIME_PALACE_ORDER);
+      return {
+        inputs,
+        firstLayer: SPACE_TIME_PALACE_ORDER.slice(),
+        secondLayer,
+        thirdLayer,
+        fourthLayer,
+        direction,
+        directionLabel,
+        monthGeneral,
+        guiRen,
+        guiRenPalace,
+        dayStemAnchorPalace,
+      };
+    }
+
+    function getLayerPosition(branch, layerClass) {
+      const inset = LAYER_INSET[layerClass];
+      const side = 100 - inset * 2;
+      const quarter = inset + side * 0.25;
+      const half = inset + side * 0.5;
+      const threeQuarter = inset + side * 0.75;
+      const max = 100 - inset;
+      const min = inset;
+      const map = {
+        '巳': [quarter, min],
+        '午': [half, min],
+        '未': [threeQuarter, min],
+        '申': [max, quarter],
+        '酉': [max, half],
+        '戌': [max, threeQuarter],
+        '亥': [threeQuarter, max],
+        '子': [half, max],
+        '丑': [quarter, max],
+        '寅': [min, threeQuarter],
+        '卯': [min, half],
+        '辰': [min, quarter],
+      };
+      const [x, y] = map[branch] || [50, 50];
+      return { x, y };
+    }
+
+    function renderSummary(data) {
+      const judgeText = data.guiRen.source === 'manual' ? '手动覆盖' : `按占卜之时 ${data.inputs.divinationBranch} 自动判定`;
+      const cards = [
+        {
+          k: '占卜之时',
+          v: `${data.inputs.divinationBranch}`,
+          s: `页面载入默认取当前北京时间对应时辰；当前同时负责月将落宫与昼夜贵人判定`,
+        },
+        {
+          k: '月将',
+          v: `${data.monthGeneral.branch}`,
+          s: `${data.monthGeneral.name} · ${data.monthGeneral.monthLabel}`,
+        },
+        {
+          k: '月将起点',
+          v: `${data.inputs.divinationBranch}宫`,
+          s: `计算得出的月将固定落在占卜之时对应宫位`,
+        },
+        {
+          k: '贵人',
+          v: `${data.guiRen.branch}`,
+          s: `${data.guiRen.type} · ${judgeText}`,
+        },
+      ];
+      EL.summary.innerHTML = cards.map(card => `
+        <div class="summary-card">
+          <div class="k">${card.k}</div>
+          <div class="v">${card.v}</div>
+          <div class="s">${card.s}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderBoard(data) {
+      const layers = [
+        { cls: 'l4', values: data.fourthLayer },
+        { cls: 'l3', values: data.thirdLayer },
+        { cls: 'l2', values: data.secondLayer },
+        { cls: 'l1', values: data.firstLayer },
+      ];
+      EL.board.innerHTML = `
+        <div class="square-layer l4"></div>
+        <div class="square-layer l3"></div>
+        <div class="square-layer l2"></div>
+        <div class="square-layer l1"></div>
+      `;
+
+      SPACE_TIME_PALACE_ORDER.forEach((branch, idx) => {
+        layers.forEach(layer => {
+          const value = layer.values[idx] || '';
+          const { x, y } = getLayerPosition(branch, layer.cls);
+          EL.board.insertAdjacentHTML('beforeend', `
+            <div class="node ${layer.cls}" style="left:${x}%;top:${y}%">
+              <div class="big">${value}</div>
+              <div class="small">${layer.cls === 'l1' ? branch : ''}</div>
+            </div>
+          `);
+        });
+      });
+    }
+
+    function run() {
+      updateJudgeDisplay();
+      const data = buildBoardData();
+      renderSummary(data);
+      renderBoard(data);
+    }
+
+    [
+      EL.gender,
+      EL.yearStem,
+      EL.yearBranch,
+      EL.monthStem,
+      EL.monthBranch,
+      EL.dayStem,
+      EL.dayBranch,
+      EL.hourStem,
+      EL.hourBranch,
+      EL.divinationBranch,
+    ].forEach(element => {
+      element.addEventListener('change', run);
+    });
+
+    EL.runBtn.addEventListener('click', run);
+    EL.resetBtn.addEventListener('click', resetDefaults);
+    EL.printBtn.addEventListener('click', () => window.print());
+
+    fillBaseOptions();
+    resetDefaults();
+  </script>
+</body>
 </html>
