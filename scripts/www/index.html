@@ -1,11 +1,3049 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f5f7fb" />
+<meta name="format-detection" content="telephone=no,email=no,address=no" />
+<title>时空卦四层十二宫排盘（离线版）</title>
+<style>
+   :root {
+    --bg: #f5f1e8;
+    --card: #f5f1e8;
+    --line: #e5ded0;
+    --line-strong: #ddd4c4;
+    --text: #1f1f1f;
+    --muted: #7d786f;
+    --accent: #3f6ed8;
+    --accent-soft: #eef3ff;
+    --danger: #b53a3a;
+    --shadow: none;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    text-rendering: geometricPrecision;
+  }
+  body {
+    min-height: 100vh;
+    overscroll-behavior-x: none;
+    touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .app {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
+  }
+  .stack {
+    display: grid;
+    gap: 14px;
+    padding: 14px 0 28px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-head {
+    padding: 14px 16px 0;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .section-sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .panel {
+    padding: 14px 16px 16px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .segmented {
+    display: inline-flex;
+    background: #eef2f8;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .segmented button {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    min-height: 40px;
+  }
+  .segmented button.active {
+    background: #faf7ef;
+    color: var(--accent);
+    box-shadow: 0 2px 8px rgba(31,75,204,.12);
+  }
+  .grid {
+    display: grid;
+    gap: 10px;
+  }
+  .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+  .field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .input, select, textarea, button {
+    font: inherit;
+  }
+  .input, select, textarea {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #faf7ef;
+    padding: 10px 12px;
+    color: var(--text);
+    outline: none;
+  }
+  .input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(31,75,204,.12);
+  }
+  textarea {
+    min-height: 84px;
+    resize: vertical;
+  }
+  .fieldset {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    background: #f7f2e8;
+  }
+  .legend {
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .row > * {
+    flex: 1 1 0;
+  }
+  .btns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .btn {
+    min-height: 46px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: #faf7ef;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn.soft {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+  }
+  .btn.danger {
+    color: var(--danger);
+  }
+  .helper {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  .hide { display: none !important; }
+
+  .plate-nav {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px 4px;
+    flex-wrap: wrap;
+  }
+  .plate-nav .btn {
+    min-height: 40px;
+    padding: 0 12px;
+  }
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+  .summary-item {
+    border: 1px solid var(--line);
+    background: #f7f2e8;
+    border-radius: 14px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .summary-k {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .summary-v {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .plate-wrap {
+    padding: 8px 10px 14px;
+    display: flex;
+    justify-content: center;
+  }
+  .plate-shell {
+    background: transparent;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .plate {
+    width: min(100%, 92vw, 620px);
+    aspect-ratio: 1 / 1;
+    position: relative;
+    background: transparent;
+    margin: 0 auto;
+  }
+  .ring-char {
+    position: absolute;
+    transform: translate3d(-50%, -50%, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5em;
+    min-height: 1.5em;
+    line-height: 1;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0;
+    user-select: none;
+    white-space: nowrap;
+    font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    font-feature-settings: "palt" 0;
+    -webkit-font-smoothing: antialiased;
+    backface-visibility: hidden;
+  }
+  .ring-1 {
+    color: #111111;
+    font-size: clamp(18px, 3.5vw, 24px);
+  }
+  .ring-2 {
+    color: #111111;
+    font-size: clamp(18px, 3.5vw, 24px);
+  }
+  .ring-3 {
+    color: #2f87ff;
+    font-size: clamp(18px, 3.5vw, 24px);
+  }
+  .ring-4 {
+    color: #5c4835;
+    font-size: clamp(18px, 3.5vw, 24px);
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 10px 14px;
+  }
+
+  .result-text {
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    background: #f7f2e8;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .history-list {
+    display: grid;
+    gap: 10px;
+  }
+  .history-item {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+    background: #faf7ef;
+  }
+  .history-top {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 8px;
+  }
+  .history-title {
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .history-time {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .history-note {
+    margin: 8px 0;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    background: #f7f2e8;
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+  .history-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+    white-space: pre-wrap;
+  }
+  .history-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .empty {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 8px 0;
+  }
+
+  .spirit-guide {
+    display: grid;
+    gap: 10px;
+  }
+  .spirit-note {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+    background: #f7f2e8;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+  .spirit-card {
+    border: 1px solid var(--line);
+    background: #faf7ef;
+    border-radius: 15px;
+    padding: 11px 12px;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .spirit-symbol {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 20px;
+    font-weight: 900;
+  }
+  .spirit-name {
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+  .spirit-meaning {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text);
+  }
+  .spirit-tags {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .spirit-tag {
+    font-size: 11px;
+    color: var(--muted);
+    background: #f7f2e8;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 7px;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom) + 18px);
+    transform: translateX(-50%) translateY(16px);
+    background: rgba(18,32,51,.92);
+    color: #fff;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: .24s ease;
+    z-index: 999;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+
+  /* 页面流程：启动只显示输入页，排盘时显示过渡页，完成后显示结果页 */
+  body.state-input #plateCard,
+  body.state-input #historyCard,
+  body.state-input #transitionCard,
+  body.state-loading #inputCard,
+  body.state-loading #plateCard,
+  body.state-loading #historyCard,
+  body.state-result #inputCard,
+  body.state-result #transitionCard {
+    display: none !important;
+  }
+  body.state-loading #transitionCard,
+  body.state-result #plateCard,
+  body.state-result #historyCard {
+    display: block;
+  }
+
+  body.state-loading #transitionCard.transition-card {
+    display: grid;
+  }
+  .transition-card {
+    min-height: calc(100vh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 28px 18px;
+  }
+  .transition-inner {
+    width: min(100%, 420px);
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+  }
+  .loading-orb {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    border: 1px solid rgba(63,110,216,.25);
+    background: radial-gradient(circle at 35% 30%, #ffffff, #eef3ff 48%, rgba(63,110,216,.18));
+    box-shadow: 0 16px 38px rgba(63,110,216,.16);
+    position: relative;
+    animation: orbPulse 1.15s ease-in-out infinite alternate;
+  }
+  .loading-orb::before,
+  .loading-orb::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: rgba(63,110,216,.75);
+    border-right-color: rgba(63,110,216,.18);
+    animation: orbSpin 1s linear infinite;
+  }
+  .loading-orb::after {
+    inset: 10px;
+    border-top-color: rgba(92,72,53,.55);
+    border-right-color: rgba(92,72,53,.12);
+    animation-duration: 1.45s;
+    animation-direction: reverse;
+  }
+  .transition-title {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: .04em;
+  }
+  .transition-sub {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .transition-steps {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .transition-step {
+    border: 1px solid var(--line);
+    background: #faf7ef;
+    border-radius: 14px;
+    padding: 9px 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+  }
+  @keyframes orbSpin { to { transform: rotate(360deg); } }
+  @keyframes orbPulse { from { transform: scale(.96); } to { transform: scale(1.04); } }
+
+
+
+  /* 丝滑结果页：主界面只保留盘面，文本/记录/备注全部弹层查看 */
+  body.state-result {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  body.state-result .app {
+    height: 100dvh;
+    max-width: 760px;
+  }
+  body.state-result .stack {
+    height: 100%;
+    padding: 8px 0;
+    gap: 0;
+  }
+  body.state-result #plateCard {
+    min-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    display: flex !important;
+    flex-direction: column;
+  }
+  body.state-result .section-head {
+    padding-top: 10px;
+  }
+  body.state-result .section-sub {
+    display: none;
+  }
+  body.state-result .plate-nav {
+    padding: 10px 12px 4px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.state-result .summary-bar {
+    padding: 6px 12px 4px;
+  }
+  body.state-result .summary-item {
+    padding: 8px 6px;
+  }
+  body.state-result .summary-k {
+    font-size: 10px;
+  }
+  body.state-result .summary-v {
+    font-size: 15px;
+  }
+  body.state-result .plate-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: center;
+    padding: 0 8px 4px;
+  }
+  body.state-result .plate-shell {
+    align-items: center;
+  }
+  body.state-result .plate {
+    width: min(94vw, 620px, calc(100dvh - 250px));
+    max-width: 100%;
+  }
+  body.state-result .actions {
+    padding: 6px 10px 12px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  body.state-result .actions .btn,
+  body.state-result .plate-nav .btn {
+    min-height: 42px;
+    border-radius: 13px;
+    font-size: 13px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(31,31,31,.34);
+    display: none;
+    align-items: end;
+    justify-content: center;
+    padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
+    animation: modalFade .18s ease both;
+  }
+  .modal-backdrop.show {
+    display: flex;
+  }
+  .sheet-modal {
+    width: min(100%, 620px);
+    max-height: min(82dvh, 760px);
+    background: #f5f1e8;
+    border: 1px solid var(--line-strong);
+    border-radius: 22px;
+    box-shadow: 0 22px 70px rgba(38,32,24,.22);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    animation: sheetUp .22s ease both;
+  }
+  .sheet-head {
+    padding: 14px 16px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sheet-title {
+    font-size: 16px;
+    font-weight: 900;
+  }
+  .sheet-body {
+    min-height: 0;
+    overflow: auto;
+    padding: 14px 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sheet-actions {
+    padding: 10px 16px 14px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    background: #f5f1e8;
+  }
+  .sheet-actions.single {
+    grid-template-columns: 1fr;
+  }
+  .sheet-actions.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .modal-text {
+    max-height: none;
+    min-height: 260px;
+    font-size: 14px;
+  }
+  .modal-backdrop .btn {
+    min-height: 42px;
+  }
+  .icon-close {
+    width: 38px;
+    height: 38px;
+    min-height: 38px !important;
+    padding: 0;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  #historyModal .history-list {
+    gap: 12px;
+  }
+  #historyModal .history-text {
+    max-height: 150px;
+    overflow: auto;
+    background: #f7f2e8;
+    border-radius: 12px;
+    padding: 8px 10px;
+  }
+  #recordModal textarea {
+    min-height: 120px;
+  }
+  @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes sheetUp { from { transform: translateY(18px); opacity: .92; } to { transform: translateY(0); opacity: 1; } }
+
+
+  /* 高级移动端选择器：替代原生 select/date/time 弹窗 */
+
+  .lunar-date-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (max-width: 520px) {
+    .lunar-date-grid { grid-template-columns: 1fr; }
+  }
+
+  .native-select-hidden,
+  .native-date-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .picker-trigger,
+  .date-part-btn,
+  .mini-chip {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .picker-trigger {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.54), rgba(255,255,255,.12)),
+      #faf7ef;
+    color: var(--text);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: 0 6px 18px rgba(45,35,20,.035);
+  }
+  .picker-trigger:active,
+  .date-part-btn:active,
+  .mini-chip:active {
+    transform: scale(.985);
+  }
+  .picker-trigger:focus-visible,
+  .date-part-btn:focus-visible,
+  .mini-chip:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(63,110,216,.14);
+  }
+  .picker-value {
+    font-size: 15px;
+    font-weight: 850;
+    letter-spacing: .02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .picker-meta {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .picker-caret {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    color: var(--accent);
+    background: rgba(63,110,216,.09);
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .picker-sheet {
+    max-height: min(78dvh, 680px);
+  }
+  .picker-options {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+  }
+  .picker-options.compact {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .picker-options.wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .picker-options.single {
+    grid-template-columns: 1fr;
+  }
+  .picker-option {
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.08)),
+      #faf7ef;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 850;
+    padding: 0 8px;
+  }
+  .picker-option.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(63,110,216,.22);
+  }
+  .picker-option:disabled {
+    opacity: .35;
+  }
+  .picker-hint {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .smart-date-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .smart-date-row.time-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .date-part-btn {
+    min-height: 48px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.54), rgba(255,255,255,.12)),
+      #faf7ef;
+    color: var(--text);
+    display: grid;
+    place-items: center;
+    padding: 8px 6px;
+    box-shadow: 0 6px 18px rgba(45,35,20,.035);
+  }
+  .date-num {
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 900;
+  }
+  .date-unit {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 800;
+  }
+  .quick-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .mini-chip {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    min-height: 32px;
+    padding: 0 11px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 850;
+  }
+  .mode-note {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(250,247,239,.72);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .mode-note b {
+    color: var(--text);
+  }
+
+  @media (max-width: 700px) {
+    .summary-bar {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .grid.cols-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 520px) {
+    .app {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+    .plate-nav {
+      padding: 10px 12px 2px;
+    }
+    .plate-nav .btn {
+      flex: 1 1 100%;
+    }
+    .panel, .section-head {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+    .plate-wrap, .actions {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    .plate {
+      width: min(100%, 94vw, 520px);
+      aspect-ratio: 1 / 1;
+    }
+    .ring-1 {
+      font-size: clamp(15px, 4.2vw, 18px);
+    }
+    .ring-2 {
+      font-size: clamp(15px, 4.2vw, 18px);
+    }
+    .ring-3 {
+      font-size: clamp(15px, 4.2vw, 18px);
+    }
+    .ring-4 {
+      font-size: clamp(15px, 4.2vw, 18px);
+    }
+    .layer .k {
+      font-size: 9px;
+      margin-right: 3px;
+    }
+    .layer .v {
+      font-size: clamp(12px, 3.5vw, 18px);
+    }
+    .btns {
+      grid-template-columns: 1fr;
+    }
+  }
+
+
+  @media (max-width: 520px) {
+    body.state-result .section-head {
+      padding: 8px 12px 0;
+    }
+    body.state-result .section-title {
+      font-size: 16px;
+    }
+    body.state-result .plate-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: 8px 10px 2px;
+    }
+    body.state-result .summary-bar {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+    body.state-result .summary-item {
+      padding: 7px 4px;
+      border-radius: 12px;
+    }
+    body.state-result .summary-v {
+      font-size: 13px;
+    }
+    body.state-result .summary-k {
+      font-size: 9px;
+    }
+    body.state-result .actions {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 5px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    body.state-result .actions .btn,
+    body.state-result .plate-nav .btn {
+      min-height: 40px;
+      padding: 0 4px;
+      font-size: 11px;
+    }
+    body.state-result .plate {
+      width: min(96vw, calc(100dvh - 230px));
+    }
+    .modal-backdrop {
+      padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+    }
+    .sheet-modal {
+      border-radius: 20px;
+      max-height: 86dvh;
+    }
+    .sheet-body {
+      padding: 12px;
+    }
+    .sheet-actions.three {
+      grid-template-columns: 1fr;
+    }
+  }
+
+
+  /* 最终发布版：输入页压缩首屏高度，去掉说明文字，尽量避免上下滑动 */
+  body.state-input .app {
+    max-width: 760px;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  body.state-input .stack {
+    min-height: 100dvh;
+    padding: 6px 0;
+    gap: 0;
+  }
+  body.state-input #inputCard {
+    min-height: calc(100dvh - 12px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+  }
+  body.state-input #inputCard .section-head { padding: 10px 14px 0; }
+  body.state-input #inputCard .section-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: .02em;
+  }
+  body.state-input #inputCard .section-sub,
+  body.state-input .mode-note,
+  body.state-input .helper { display: none !important; }
+  body.state-input #inputCard .panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px 12px;
+  }
+  body.state-input .toolbar { margin-bottom: 8px; }
+  body.state-input .segmented {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 3px;
+    gap: 3px;
+  }
+  body.state-input .segmented button {
+    min-height: 36px;
+    padding: 7px 4px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+  body.state-input #manualPane,
+  body.state-input #solarPane,
+  body.state-input #lunarPane { gap: 8px !important; align-content: start; }
+  body.state-input .grid { gap: 8px; }
+  body.state-input .field { gap: 4px; }
+  body.state-input .field label { font-size: 11px; line-height: 1.1; }
+  body.state-input .fieldset { padding: 8px; gap: 8px; border-radius: 14px; }
+  body.state-input .legend { font-size: 12px; margin-bottom: 0; }
+  body.state-input .fieldset .grid.cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px;
+  }
+  body.state-input .picker-trigger,
+  body.state-input .date-part-btn { min-height: 42px; border-radius: 12px; padding: 7px 8px; }
+  body.state-input .picker-value { font-size: 14px; }
+  body.state-input .picker-meta,
+  body.state-input .fieldset .picker-caret { display: none; }
+  body.state-input .picker-caret { width: 24px; height: 24px; font-size: 12px; }
+  body.state-input .smart-date-row { gap: 6px; }
+  body.state-input .date-num { font-size: 14px; }
+  body.state-input .date-unit { margin-top: 3px; font-size: 10px; }
+  body.state-input .quick-row { margin-top: 5px; gap: 6px; }
+  body.state-input .mini-chip { min-height: 28px; padding: 0 9px; font-size: 11px; }
+  body.state-input .btns { gap: 8px; margin-top: 6px; }
+  body.state-input .btn { min-height: 42px; border-radius: 12px; padding: 0 10px; }
+  body.state-input .lunar-date-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  body.state-input #lunarToSolarPreview { min-height: 42px; font-size: 13px; padding: 8px; }
+
+  @media (max-width: 380px) {
+    body.state-input .app { padding-left: 7px; padding-right: 7px; }
+    body.state-input #inputCard .panel { padding-left: 8px; padding-right: 8px; }
+    body.state-input .fieldset { padding: 7px; }
+    body.state-input .fieldset .grid.cols-4 { gap: 5px; }
+    body.state-input .picker-trigger,
+    body.state-input .date-part-btn { min-height: 40px; padding: 6px 5px; }
+    body.state-input .picker-value { font-size: 13px; }
+    body.state-input .field label { font-size: 10px; }
+  }
+
+  @media (max-height: 680px) {
+    body.state-input .stack { padding-top: 4px; padding-bottom: 4px; }
+    body.state-input #inputCard .section-head { padding-top: 8px; }
+    body.state-input #inputCard .panel { padding-top: 8px; padding-bottom: 8px; }
+    body.state-input .toolbar { margin-bottom: 6px; }
+    body.state-input #manualPane,
+    body.state-input #solarPane,
+    body.state-input #lunarPane,
+    body.state-input .grid,
+    body.state-input .fieldset { gap: 6px !important; }
+    body.state-input .picker-trigger,
+    body.state-input .date-part-btn,
+    body.state-input .btn { min-height: 38px; }
+    body.state-input .segmented button { min-height: 34px; }
+  }
+
+</style>
+</head>
+<body class="state-input">
+<div class="app">
+  <div class="stack">
+    <section class="card" id="inputCard">
+      <div class="section-head">
+        <h1 class="section-title">输入排盘信息</h1>
+      </div>
+      <div class="panel">
+        <div class="toolbar">
+          <div class="segmented" id="inputModeBar">
+            <button type="button" class="active" data-mode="manual">手动四柱</button>
+            <button type="button" data-mode="solar">公历辅助</button>
+            <button type="button" data-mode="lunar">农历辅助</button>
+          </div>
+        </div>
+
+        <div id="manualPane" class="grid" style="gap:12px;">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>性别</label>
+              <select id="gender"></select>
+            </div>
+            <div class="field">
+              <label>占卜之时</label>
+              <select id="divinationBranch"></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>贵人模式</label>
+            <select id="nobleMode"></select>
+          </div>
+
+          <div class="fieldset">
+            <div class="legend">四柱输入</div>
+
+            <div class="grid cols-4">
+              <div class="field"><label>年干</label><select id="yearStem"></select></div>
+              <div class="field"><label>年支</label><select id="yearBranch"></select></div>
+              <div class="field"><label>月干</label><select id="monthStem"></select></div>
+              <div class="field"><label>月支</label><select id="monthBranch"></select></div>
+            </div>
+
+            <div class="grid cols-4">
+              <div class="field"><label>日干</label><select id="dayStem"></select></div>
+              <div class="field"><label>日支</label><select id="dayBranch"></select></div>
+              <div class="field"><label>时干</label><select id="hourStem"></select></div>
+              <div class="field"><label>时支</label><select id="hourBranch"></select></div>
+            </div>
+          </div>
+
+          <div class="btns manual-only-actions">
+            <button type="button" class="btn primary" id="calcBtn">一键排盘</button>
+            <button type="button" class="btn" id="resetBtn">一键重置</button>
+          </div>
+        </div>
+
+        <div id="solarPane" class="grid hide" style="gap:12px;">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>性别</label>
+              <select id="solarGender"></select>
+            </div>
+            <div class="field">
+              <label>占卜之时</label>
+              <select id="solarDivinationBranch"></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>贵人模式</label>
+            <select id="solarNobleMode"></select>
+          </div>
+          <div class="grid cols-2">
+            <div class="field">
+              <label>公历日期</label>
+              <input class="input" id="solarDate" type="date" />
+              <div class="quick-row">
+                <button type="button" class="mini-chip" id="solarTodayBtn">今天</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>时间</label>
+              <input class="input" id="solarTime" type="time" value="12:00" />
+              <div class="quick-row">
+                <button type="button" class="mini-chip" id="solarNowBtn">当前时间</button>
+              </div>
+            </div>
+          </div>
+          <div class="btns" style="margin-top:0;">
+            <button type="button" class="btn soft" id="fillFromSolar">自动转四柱</button>
+          </div>
+        </div>
+
+        <div id="lunarPane" class="grid hide" style="gap:12px;">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>性别</label>
+              <select id="lunarGender"></select>
+            </div>
+            <div class="field">
+              <label>占卜之时</label>
+              <select id="lunarDivinationBranch"></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>贵人模式</label>
+            <select id="lunarNobleMode"></select>
+          </div>
+          <div class="grid cols-3 lunar-date-grid">
+            <div class="field">
+              <label>农历年</label>
+              <select id="lunarYear"></select>
+            </div>
+            <div class="field">
+              <label>农历月</label>
+              <select id="lunarMonth"></select>
+            </div>
+            <div class="field">
+              <label>农历日</label>
+              <select id="lunarDay"></select>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="field">
+              <label>时间</label>
+              <input class="input" id="lunarTime" type="time" value="12:00" />
+              <div class="quick-row">
+                <button type="button" class="mini-chip" id="lunarTodayBtn">设为今日农历</button>
+                <button type="button" class="mini-chip" id="lunarNowBtn">当前时间</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>换算后的公历</label>
+              <input class="input" id="lunarToSolarPreview" type="text" readonly placeholder="选择农历日期后自动显示" />
+            </div>
+          </div>
+          <div class="btns" style="margin-top:0;">
+            <button type="button" class="btn soft" id="fillFromLunar">自动转四柱</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card transition-card" id="transitionCard" aria-live="polite">
+      <div class="transition-inner">
+        <div class="loading-orb" aria-hidden="true"></div>
+        <div>
+          <div class="transition-title">正在起盘</div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="card" id="plateCard">
+      <div class="section-head">
+        <h2 class="section-title">四层十二宫</h2>
+        <div class="section-sub">最内层宫位地支｜第二层月将地支｜第三层十二天将｜最外层天干</div>
+      </div>
+      <div class="plate-nav">
+        <button type="button" class="btn" id="backToInputBtn">返回输入</button>
+        <button type="button" class="btn soft" id="historyBtn">本地记录</button>
+      </div>
+      <div class="summary-bar">
+        <div class="summary-item"><div class="summary-k">月将</div><div class="summary-v" id="summaryMonthGeneral">—</div></div>
+        <div class="summary-item"><div class="summary-k">贵人</div><div class="summary-v" id="summaryNoble">—</div></div>
+        <div class="summary-item"><div class="summary-k">昼夜</div><div class="summary-v" id="summaryDayNight">—</div></div>
+        <div class="summary-item"><div class="summary-k">方向</div><div class="summary-v" id="summaryDirection">—</div></div>
+      </div>
+      <div class="plate-wrap">
+        <div class="plate-shell">
+          <div class="plate" id="plateCanvas"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn soft" id="openTextBtn">排盘文本</button>
+        <button type="button" class="btn soft" id="spiritGuideBtn">十二神</button>
+        <button type="button" class="btn soft" id="imageBtn">保存图片</button>
+        <button type="button" class="btn soft" id="saveRecordBtn">保存记录</button>
+        <button type="button" class="btn" id="recalcBtn">重算</button>
+      </div>
+    </section>
+
+    <section class="card hide" id="historyCard" aria-hidden="true"></section>
+
+    <div class="modal-backdrop" id="textModal" aria-hidden="true">
+      <div class="sheet-modal" role="dialog" aria-modal="true" aria-labelledby="textModalTitle">
+        <div class="sheet-head">
+          <div class="sheet-title" id="textModalTitle">排盘文本</div>
+          <button type="button" class="btn icon-close" id="closeTextModalBtn">×</button>
+        </div>
+        <div class="sheet-body">
+          <div id="resultText" class="result-text modal-text">请先输入信息后点击“一键排盘”。</div>
+        </div>
+        <div class="sheet-actions">
+          <button type="button" class="btn soft" id="copyTextInModalBtn">复制文本</button>
+          <button type="button" class="btn" id="closeTextModalBtn2">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="spiritModal" aria-hidden="true">
+      <div class="sheet-modal" role="dialog" aria-modal="true" aria-labelledby="spiritModalTitle">
+        <div class="sheet-head">
+          <div>
+            <div class="sheet-title" id="spiritModalTitle">十二神含义速查</div>
+            <div class="section-sub" style="margin-top:2px;">也称十二天将，供排盘后快速回忆取象方向。</div>
+          </div>
+          <button type="button" class="btn icon-close" id="closeSpiritModalBtn">×</button>
+        </div>
+        <div class="sheet-body">
+          <div class="spirit-guide" id="spiritGuideList"></div>
+        </div>
+        <div class="sheet-actions single">
+          <button type="button" class="btn" id="closeSpiritModalBtn2">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="recordModal" aria-hidden="true">
+      <div class="sheet-modal" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle">
+        <div class="sheet-head">
+          <div class="sheet-title" id="recordModalTitle">保存本次排盘</div>
+          <button type="button" class="btn icon-close" id="closeRecordModalBtn">×</button>
+        </div>
+        <div class="sheet-body">
+          <div class="field">
+            <label>本次备注</label>
+            <textarea id="noteInput" placeholder="可选：写下这次排盘备注，保存后会进入本地记录"></textarea>
+          </div>
+        </div>
+        <div class="sheet-actions">
+          <button type="button" class="btn primary" id="saveRecordConfirmBtn">确认保存</button>
+          <button type="button" class="btn" id="closeRecordModalBtn2">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="historyModal" aria-hidden="true">
+      <div class="sheet-modal" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle">
+        <div class="sheet-head">
+          <div>
+            <div class="sheet-title" id="historyModalTitle">本地排盘记录</div>
+            <div class="section-sub" style="margin-top:2px;">仅保存在当前浏览器本地，不上传，不联网。</div>
+          </div>
+          <button type="button" class="btn icon-close" id="closeHistoryModalBtn">×</button>
+        </div>
+        <div class="sheet-body">
+          <div id="historyList" class="history-list"></div>
+        </div>
+        <div class="sheet-actions three">
+          <button type="button" class="btn" id="clearHistoryBtn">清空记录</button>
+          <button type="button" class="btn soft" id="exportHistoryBtn">导出文本</button>
+          <button type="button" class="btn" id="closeHistoryModalBtn2">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+  const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+  const YANG_STEMS = new Set(["甲","丙","戊","庚","壬"]);
+  const YIN_STEMS = new Set(["乙","丁","己","辛","癸"]);
+  const YANG_BRANCHES = ["子","寅","辰","午","申","戌"];
+  const YIN_BRANCHES = ["丑","卯","巳","未","酉","亥"];
+  const PALACES = ["巳","午","未","申","酉","戌","亥","子","丑","寅","卯","辰"];
+  const PALACE_GRID = {
+    0: "0 / 1", 1: "0 / 2", 2: "0 / 3", 3: "0 / 4",
+    4: "1 / 4", 5: "2 / 4",
+    6: "3 / 4", 7: "3 / 3", 8: "3 / 2", 9: "3 / 1",
+    10: "2 / 1", 11: "1 / 1"
+  };
+  const GENERALS = ["贵","蛇","雀","合","勾","龙","空","虎","常","玄","阴","后"];
+  const SPIRIT_MEANINGS = [
+    { key: "贵", name: "贵人", meaning: "主贵人扶持、上级帮助、关键人物、化解困难，也代表事情的核心助力。", tags: ["助力", "贵气", "关键人"] },
+    { key: "蛇", name: "腾蛇", meaning: "主惊疑、虚惊、纠缠、变化、怪异之象，常看心理压力、反复不定。", tags: ["惊疑", "纠缠", "变化"] },
+    { key: "雀", name: "朱雀", meaning: "主言语、消息、文书、表达、口舌是非，也可看宣传传播与信息往来。", tags: ["口舌", "文书", "信息"] },
+    { key: "合", name: "六合", meaning: "主和合、合作、人缘、婚恋、交易、撮合，偏向关系连接与达成。", tags: ["合作", "和合", "关系"] },
+    { key: "勾", name: "勾陈", meaning: "主牵连、阻滞、土地房产、旧事纠纷，也看拖延、困住、反复缠绕。", tags: ["阻滞", "牵连", "田宅"] },
+    { key: "龙", name: "青龙", meaning: "主喜庆、财喜、进展、机会、体面之事，常看顺利、增长、好消息。", tags: ["财喜", "进展", "好事"] },
+    { key: "空", name: "天空", meaning: "主空耗、落空、虚象、计划未实，也可看抽离、清空、暂时无结果。", tags: ["落空", "虚象", "消耗"] },
+    { key: "虎", name: "白虎", meaning: "主压力、冲突、伤病、强硬、风险，也代表执行力、威势与破局之力。", tags: ["压力", "冲突", "风险"] },
+    { key: "常", name: "太常", meaning: "主衣食、稳定、礼仪、日常事务、资源供给，也看规矩、身份与体面。", tags: ["稳定", "衣食", "礼仪"] },
+    { key: "玄", name: "玄武", meaning: "主隐秘、暗线、欺瞒、盗失、暧昧不明，也看私下活动与隐藏信息。", tags: ["隐秘", "暗昧", "盗失"] },
+    { key: "阴", name: "太阴", meaning: "主阴私、女性、细节、谋划、财物积累，也看柔性资源和暗中助力。", tags: ["细节", "谋划", "女性"] },
+    { key: "后", name: "天后", meaning: "主保护、包容、后援、女性长辈、滋养之象，也看情感支持与退路。", tags: ["保护", "后援", "滋养"] }
+  ];
+  const MONTH_GENERAL_MAP = {
+    1: "亥", 2: "戌", 3: "酉", 4: "申", 5: "未", 6: "午",
+    7: "巳", 8: "辰", 9: "卯", 10: "寅", 11: "丑", 12: "子"
+  };
+  const MONTH_GENERAL_NAME = {
+    "亥": "登明", "戌": "河魁", "酉": "从魁", "申": "传送", "未": "小吉", "午": "胜光",
+    "巳": "太乙", "辰": "天罡", "卯": "太冲", "寅": "功曹", "丑": "大吉", "子": "神后"
+  };
+  const BRANCH_VALUE_MAIN = {
+    "寅":1,"卯":2,"辰":3,"巳":4,"午":5,"未":6,"申":7,"酉":8,"戌":9,"亥":10,"子":11,"丑":12
+  };
+  const BRANCH_VALUE_HOUR = {
+    "子":1,"丑":2,"寅":3,"卯":4,"辰":5,"巳":6,"午":7,"未":8,"申":9,"酉":10,"戌":11,"亥":12
+  };
+  const NOBLE_MAP = {
+    "甲":["丑","未"],"戊":["丑","未"],"庚":["丑","未"],
+    "乙":["子","申"],"己":["子","申"],
+    "丙":["亥","酉"],"丁":["亥","酉"],
+    "壬":["巳","卯"],"癸":["巳","卯"],
+    "辛":["午","寅"]
+  };
+  const DAY_NOBLE_BRANCHES = new Set(["寅","卯","辰","巳","午","未","申"]);
+  const NOBLE_MODE_OPTIONS = [
+    { value: "auto", label: "默认（按占卜之时）" },
+    { value: "yang", label: "强制阳贵人" },
+    { value: "yin", label: "强制阴贵人" }
+  ];
+  const LAYER_KEYS = ["宫位","月将","天将","天干"];
+  const LUNAR_MONTH_NAMES = ["", "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"];
+  const LUNAR_DAY_NAMES = ["", "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十", "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十", "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"];
+
+  const lunarInfo = [
+0x4bd8,0x4ae0,0xa570,0x54d5,0xd260,0xd950,0x5554,0x56af,0x9ad0,0x55d2,
+0x4ae0,0xa5b6,0xa4d0,0xd250,0xd295,0xb54f,0xd6a0,0xada2,0x95b0,0x4977,
+0x497f,0xa4b0,0xb4b5,0x6a50,0x6d40,0xab54,0x2b6f,0x9570,0x52f2,0x4970,
+0x6566,0xd4a0,0xea50,0x6a95,0x5adf,0x2b60,0x86e3,0x92ef,0xc8d7,0xc95f,
+0xd4a0,0xd8a6,0xb55f,0x56a0,0xa5b4,0x25df,0x92d0,0xd2b2,0xa950,0xb557,
+0x6ca0,0xb550,0x5355,0x4daf,0xa5b0,0x4573,0x52bf,0xa9a8,0xe950,0x6aa0,
+0xaea6,0xab50,0x4b60,0xaae4,0xa570,0x5260,0xf263,0xd950,0x5b57,0x56a0,
+0x96d0,0x4dd5,0x4ad0,0xa4d0,0xd4d4,0xd250,0xd558,0xb540,0xb6a0,0x95a6,
+0x95bf,0x49b0,0xa974,0xa4b0,0xb27a,0x6a50,0x6d40,0xaf46,0xab60,0x9570,
+0x4af5,0x4970,0x64b0,0x74a3,0xea50,0x6b58,0x5ac0,0xab60,0x96d5,0x92e0,
+0xc960,0xd954,0xd4a0,0xda50,0x7552,0x56a0,0xabb7,0x25d0,0x92d0,0xcab5,
+0xa950,0xb4a0,0xbaa4,0xad50,0x55d9,0x4ba0,0xa5b0,0x5176,0x52bf,0xa930,
+0x7954,0x6aa0,0xad50,0x5b52,0x4b60,0xa6e6,0xa4e0,0xd260,0xea65,0xd530,
+0x5aa0,0x76a3,0x96d0,0x4afb,0x4ad0,0xa4d0,0xd0b6,0xd25f,0xd520,0xdd45,
+0xb5a0,0x56d0,0x55b2,0x49b0,0xa577,0xa4b0,0xaa50,0xb255,0x6d2f,0xada0,
+0x4b63,0x937f,0x49f8,0x4970,0x64b0,0x68a6,0xea5f,0x6b20,0xa6c4,0xaaef,
+0x92e0,0xd2e3,0xc960,0xd557,0xd4a0,0xda50,0x5d55,0x56a0,0xa6d0,0x55d4,
+0x52d0,0xa9b8,0xa950,0xb4a0,0xb6a6,0xad50,0x55a0,0xaba4,0xa5b0,0x52b0,
+0xb273,0x6930,0x7337,0x6aa0,0xad50,0x4b55,0x4b6f,0xa570,0x54e4,0xd260,
+0xe968,0xd520,0xdaa0,0x6aa6,0x56df,0x4ae0,0xa9d4,0xa4d0,0xd150,0xf252,
+0xd520
+];
+  const solarMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const solarTermBase = [4,19,3,18,4,19,4,19,4,20,4,20,6,22,6,22,6,22,7,22,6,21,6,21];
+  const solarTermIdx = "0123415341536789:;<9:=<>:=1>?012@015@015@015AB78CDE8CD=1FD01GH01GH01IH01IJ0KLMN;LMBEOPDQRST0RUH0RVH0RWH0RWM0XYMNZ[MB\]PT^_ST`_WH`_WH`_WM`_WM`aYMbc[Mde]Sfe]gfh_gih_Wih_WjhaWjka[jkl[jmn]ope]qph_qrh_sth_W";
+  const solarTermOS = "211122112122112121222211221122122222212222222221222122222232222222222222222233223232223232222222322222112122112121222211222122222222222222222222322222112122112121222111211122122222212221222221221122122222222222222222222223222232222232222222222222112122112121122111211122122122212221222221221122122222222222222221211122112122212221222211222122222232222232222222222222112122112121111111222222112121112121111111222222111121112121111111211122112122112121122111222212111121111121111111111122112122112121122111211122112122212221222221222211111121111121111111222111111121111111111111111122112121112121111111222111111111111111111111111122111121112121111111221122122222212221222221222111011111111111111111111122111121111121111111211122112122112121122211221111011111101111111111111112111121111121111111211122112122112221222211221111011111101111111110111111111121111111111111111122112121112121122111111011111121111111111111111011111111112111111111111011111111111111111111221111011111101110111110111011011111111111111111221111011011101110111110111011011111101111111111211111001011101110111110110011011111101111111111211111001011001010111110110011011111101111111110211111001011001010111100110011011011101110111110211111001011001010011100110011001011101110111110211111001010001010011000100011001011001010111110111111001010001010011000111111111111111111111111100011001011001010111100111111001010001010000000111111000010000010000000100011001011001010011100110011001011001110111110100011001010001010011000110011001011001010111110111100000010000000000000000011001010001010011000111100000000000000000000000011001010001010000000111000000000000000000000000011001010000010000000";
+
+  const els = {
+    inputCard: document.getElementById("inputCard"),
+    transitionCard: document.getElementById("transitionCard"),
+    plateCard: document.getElementById("plateCard"),
+    historyCard: document.getElementById("historyCard"),
+    backToInputBtn: document.getElementById("backToInputBtn"),
+    historyBtn: document.getElementById("historyBtn"),
+    inputModeBar: document.getElementById("inputModeBar"),
+    manualPane: document.getElementById("manualPane"),
+    solarPane: document.getElementById("solarPane"),
+    lunarPane: document.getElementById("lunarPane"),
+    gender: document.getElementById("gender"),
+    divinationBranch: document.getElementById("divinationBranch"),
+    nobleMode: document.getElementById("nobleMode"),
+    yearStem: document.getElementById("yearStem"),
+    yearBranch: document.getElementById("yearBranch"),
+    monthStem: document.getElementById("monthStem"),
+    monthBranch: document.getElementById("monthBranch"),
+    dayStem: document.getElementById("dayStem"),
+    dayBranch: document.getElementById("dayBranch"),
+    hourStem: document.getElementById("hourStem"),
+    hourBranch: document.getElementById("hourBranch"),
+    solarGender: document.getElementById("solarGender"),
+    solarDivinationBranch: document.getElementById("solarDivinationBranch"),
+    solarNobleMode: document.getElementById("solarNobleMode"),
+    solarDate: document.getElementById("solarDate"),
+    solarTime: document.getElementById("solarTime"),
+    lunarGender: document.getElementById("lunarGender"),
+    lunarDivinationBranch: document.getElementById("lunarDivinationBranch"),
+    lunarNobleMode: document.getElementById("lunarNobleMode"),
+    lunarYear: document.getElementById("lunarYear"),
+    lunarMonth: document.getElementById("lunarMonth"),
+    lunarDay: document.getElementById("lunarDay"),
+    lunarLeap: document.getElementById("lunarLeap"),
+    lunarTime: document.getElementById("lunarTime"),
+    lunarToSolarPreview: document.getElementById("lunarToSolarPreview"),
+    solarTodayBtn: document.getElementById("solarTodayBtn"),
+    solarNowBtn: document.getElementById("solarNowBtn"),
+    lunarTodayBtn: document.getElementById("lunarTodayBtn"),
+    lunarNowBtn: document.getElementById("lunarNowBtn"),
+    calcBtn: document.getElementById("calcBtn"),
+    recalcBtn: document.getElementById("recalcBtn"),
+    resetBtn: document.getElementById("resetBtn"),
+    fillFromSolar: document.getElementById("fillFromSolar"),
+    fillFromLunar: document.getElementById("fillFromLunar"),
+    plateCanvas: document.getElementById("plateCanvas"),
+    summaryMonthGeneral: document.getElementById("summaryMonthGeneral"),
+    summaryNoble: document.getElementById("summaryNoble"),
+    summaryDayNight: document.getElementById("summaryDayNight"),
+    summaryDirection: document.getElementById("summaryDirection"),
+    resultText: document.getElementById("resultText"),
+    noteInput: document.getElementById("noteInput"),
+    openTextBtn: document.getElementById("openTextBtn"),
+    spiritGuideBtn: document.getElementById("spiritGuideBtn"),
+    spiritModal: document.getElementById("spiritModal"),
+    spiritGuideList: document.getElementById("spiritGuideList"),
+    closeSpiritModalBtn: document.getElementById("closeSpiritModalBtn"),
+    closeSpiritModalBtn2: document.getElementById("closeSpiritModalBtn2"),
+    textModal: document.getElementById("textModal"),
+    closeTextModalBtn: document.getElementById("closeTextModalBtn"),
+    closeTextModalBtn2: document.getElementById("closeTextModalBtn2"),
+    copyTextInModalBtn: document.getElementById("copyTextInModalBtn"),
+    recordModal: document.getElementById("recordModal"),
+    closeRecordModalBtn: document.getElementById("closeRecordModalBtn"),
+    closeRecordModalBtn2: document.getElementById("closeRecordModalBtn2"),
+    saveRecordConfirmBtn: document.getElementById("saveRecordConfirmBtn"),
+    historyModal: document.getElementById("historyModal"),
+    closeHistoryModalBtn: document.getElementById("closeHistoryModalBtn"),
+    closeHistoryModalBtn2: document.getElementById("closeHistoryModalBtn2"),
+    imageBtn: document.getElementById("imageBtn"),
+    saveRecordBtn: document.getElementById("saveRecordBtn"),
+    historyList: document.getElementById("historyList"),
+    clearHistoryBtn: document.getElementById("clearHistoryBtn"),
+    exportHistoryBtn: document.getElementById("exportHistoryBtn"),
+    toast: document.getElementById("toast")
+  };
+
+  const HISTORY_KEY = "skg_pan_history_v1";
+  let activeInputMode = "manual";
+  let latestResult = null;
+  let latestConvertedText = "";
+
+  function hasAndroidBridge() {
+    return !!window.AndroidApp;
+  }
+
+  function callAndroid(method, ...args) {
+    try {
+      if (window.AndroidApp && typeof window.AndroidApp[method] === "function") {
+        return window.AndroidApp[method](...args);
+      }
+    } catch (err) {
+      console.warn(`Android bridge call failed: ${method}`, err);
+    }
+    return null;
+  }
+
+  function markAppEnv() {
+    document.documentElement.classList.toggle("android-app", hasAndroidBridge());
+  }
+
+  function showToast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add("show");
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => els.toast.classList.remove("show"), 1800);
+  }
+
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function mod(n, m) {
+    return ((n % m) + m) % m;
+  }
+
+  function populateSelect(el, values, placeholder = "") {
+    el.innerHTML = "";
+    if (placeholder) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = placeholder;
+      el.appendChild(opt);
+    }
+    values.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.value ?? v;
+      opt.textContent = v.label ?? v;
+      if (v.disabled) opt.disabled = true;
+      el.appendChild(opt);
+    });
+    updatePickerTrigger(el);
+  }
+
+  function getManualAllowedBranches(stem) {
+    if (!stem) return [...BRANCHES];
+    if (YANG_STEMS.has(stem)) return [...YANG_BRANCHES];
+    if (YIN_STEMS.has(stem)) return [...YIN_BRANCHES];
+    return [...BRANCHES];
+  }
+
+  function syncManualBranchOptions(stemEl, branchEl) {
+    const current = branchEl.value;
+    const allowed = getManualAllowedBranches(stemEl.value);
+    populateSelect(branchEl, allowed);
+    branchEl.value = allowed.includes(current) ? current : (allowed[0] || "");
+    updatePickerTrigger(branchEl);
+  }
+
+  function syncAllManualBranchOptions() {
+    syncManualBranchOptions(els.yearStem, els.yearBranch);
+    syncManualBranchOptions(els.monthStem, els.monthBranch);
+    syncManualBranchOptions(els.dayStem, els.dayBranch);
+    syncManualBranchOptions(els.hourStem, els.hourBranch);
+  }
+
+
+  let smartPickerModal = null;
+  let smartPickerTitle = null;
+  let smartPickerBody = null;
+
+  function getFieldTitle(control) {
+    const field = control.closest(".field");
+    const label = field ? field.querySelector("label") : null;
+    return label ? label.textContent.trim() : "请选择";
+  }
+
+  function getSelectedText(selectEl) {
+    const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
+    return opt ? opt.textContent : (selectEl.value || "请选择");
+  }
+
+  function updatePickerTrigger(selectEl) {
+    if (!selectEl || !selectEl._pickerTrigger) return;
+    const valueNode = selectEl._pickerTrigger.querySelector(".picker-value");
+    const metaNode = selectEl._pickerTrigger.querySelector(".picker-meta");
+    valueNode.textContent = getSelectedText(selectEl) || "请选择";
+    metaNode.textContent = getFieldTitle(selectEl);
+  }
+
+  function updateAllPickerTriggers() {
+    document.querySelectorAll("select").forEach(updatePickerTrigger);
+  }
+
+  function ensureSmartPickerModal() {
+    if (smartPickerModal) return;
+    smartPickerModal = document.createElement("div");
+    smartPickerModal.className = "modal-backdrop";
+    smartPickerModal.id = "smartPickerModal";
+    smartPickerModal.setAttribute("aria-hidden", "true");
+    smartPickerModal.innerHTML = `
+      <div class="sheet-modal picker-sheet" role="dialog" aria-modal="true" aria-labelledby="smartPickerTitle">
+        <div class="sheet-head">
+          <div class="sheet-title" id="smartPickerTitle">请选择</div>
+          <button type="button" class="btn icon-close" id="smartPickerCloseBtn">×</button>
+        </div>
+        <div class="sheet-body">
+          <div class="picker-hint" id="smartPickerHint">轻点选项即可完成选择</div>
+          <div class="picker-options" id="smartPickerBody"></div>
+        </div>
+        <div class="sheet-actions single">
+          <button type="button" class="btn" id="smartPickerCancelBtn">取消</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(smartPickerModal);
+    smartPickerTitle = smartPickerModal.querySelector("#smartPickerTitle");
+    smartPickerBody = smartPickerModal.querySelector("#smartPickerBody");
+    smartPickerModal.querySelector("#smartPickerCloseBtn").addEventListener("click", () => closeModal(smartPickerModal));
+    smartPickerModal.querySelector("#smartPickerCancelBtn").addEventListener("click", () => closeModal(smartPickerModal));
+    smartPickerModal.addEventListener("click", e => {
+      if (e.target === smartPickerModal) closeModal(smartPickerModal);
+    });
+  }
+
+  function setPickerGridClass(count, sampleText = "") {
+    smartPickerBody.className = "picker-options";
+    if (count <= 3 || sampleText.length >= 6) smartPickerBody.classList.add("single");
+    else if (count <= 6 || sampleText.length >= 4) smartPickerBody.classList.add("wide");
+    else if (count >= 10 && sampleText.length <= 2) smartPickerBody.classList.add("compact");
+  }
+
+  function openValuePicker({ title, values, current, onPick, hint = "轻点选项即可完成选择", scrollToValue = null }) {
+    ensureSmartPickerModal();
+    smartPickerTitle.textContent = title || "请选择";
+    smartPickerModal.querySelector("#smartPickerHint").textContent = hint;
+    smartPickerBody.innerHTML = "";
+    const sample = values.reduce((a, b) => String(a.label || a).length > String(b.label || b).length ? a : b, "");
+    setPickerGridClass(values.length, String(sample.label || sample));
+    values.forEach(item => {
+      const value = item.value ?? item;
+      const label = item.label ?? item;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "picker-option";
+      btn.textContent = label;
+      btn.dataset.value = String(value);
+      btn.disabled = !!item.disabled;
+      btn.classList.toggle("active", String(value) === String(current));
+      btn.addEventListener("click", () => {
+        if (btn.disabled) return;
+        onPick(String(value), item);
+        closeModal(smartPickerModal);
+      });
+      smartPickerBody.appendChild(btn);
+    });
+    openModal(smartPickerModal);
+
+    const targetValue = scrollToValue == null ? current : scrollToValue;
+    requestAnimationFrame(() => {
+      const targetBtn = [...smartPickerBody.querySelectorAll(".picker-option")]
+        .find(btn => btn.dataset.value === String(targetValue));
+      if (targetBtn) targetBtn.scrollIntoView({ block: "center", inline: "nearest" });
+    });
+  }
+
+  function getManualChainNextSelect(selectEl) {
+    if (selectEl === els.yearStem) return els.yearBranch;
+    if (selectEl === els.yearBranch) return els.monthStem;
+    if (selectEl === els.monthStem) return els.monthBranch;
+    if (selectEl === els.monthBranch) return els.dayStem;
+    if (selectEl === els.dayStem) return els.dayBranch;
+    if (selectEl === els.dayBranch) return els.hourStem;
+    if (selectEl === els.hourStem) return els.hourBranch;
+    return null;
+  }
+
+  function openSelectPicker(selectEl) {
+    const options = [...selectEl.options].map(opt => ({
+      value: opt.value,
+      label: opt.textContent,
+      disabled: opt.disabled
+    }));
+    const nextSelect = getManualChainNextSelect(selectEl);
+    openValuePicker({
+      title: getFieldTitle(selectEl),
+      values: options,
+      current: selectEl.value,
+      scrollToValue: selectEl === els.lunarYear ? "1980" : null,
+      hint: nextSelect
+        ? "选完后自动进入下一项"
+        : "轻点选项即可完成选择",
+      onPick: value => {
+        selectEl.value = value;
+        selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+        updatePickerTrigger(selectEl);
+        if (nextSelect) {
+          setTimeout(() => openSelectPicker(nextSelect), 110);
+        }
+      }
+    });
+  }
+
+  function enhanceSelect(selectEl) {
+    if (!selectEl || selectEl._pickerTrigger) return;
+    selectEl.classList.add("native-select-hidden");
+    selectEl.setAttribute("aria-hidden", "true");
+    selectEl.tabIndex = -1;
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "picker-trigger";
+    trigger.innerHTML = `
+      <span>
+        <span class="picker-value"></span>
+        <span class="picker-meta"></span>
+      </span>
+      <span class="picker-caret">⌄</span>
+    `;
+    trigger.addEventListener("click", () => openSelectPicker(selectEl));
+    selectEl.addEventListener("change", () => updatePickerTrigger(selectEl));
+    selectEl.insertAdjacentElement("afterend", trigger);
+    selectEl._pickerTrigger = trigger;
+    updatePickerTrigger(selectEl);
+  }
+
+
+  function lunarMonthLabel(month, isLeap = false) {
+    return `${isLeap ? "闰" : ""}${LUNAR_MONTH_NAMES[month] || `${month}月`}`;
+  }
+
+  function lunarDayLabel(day) {
+    return LUNAR_DAY_NAMES[day] || `${day}日`;
+  }
+
+  function makeLunarMonthOptions(year) {
+    const y = Number(year) || 1900;
+    const lm = leapMonth(y);
+    const options = [];
+    for (let m = 1; m <= 12; m++) {
+      options.push({ value: String(m), label: lunarMonthLabel(m, false) });
+      if (lm === m) options.push({ value: `L${m}`, label: lunarMonthLabel(m, true) });
+    }
+    return options;
+  }
+
+  function makeLunarDayOptions(maxDay = 30) {
+    return Array.from({ length: maxDay }, (_, i) => ({
+      value: String(i + 1),
+      label: lunarDayLabel(i + 1)
+    }));
+  }
+
+  function formatLunarMonthValue(month, isLeap = false) {
+    return `${isLeap ? "L" : ""}${Number(month) || 1}`;
+  }
+
+  function parseLunarMonthSelection() {
+    const raw = String(els.lunarMonth.value || "1");
+    const isLeap = raw.startsWith("L");
+    const month = Number(isLeap ? raw.slice(1) : raw) || 1;
+    return { month, isLeap };
+  }
+
+  function getLunarMaxDay(year, month, isLeap = false) {
+    return isLeap ? leapDays(year) : monthDays(year, month);
+  }
+
+  function parseDateParts(input) {
+    const now = new Date();
+    const raw = input.value || `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
+    const [y, m, d] = raw.split("-").map(Number);
+    return {
+      year: y || now.getFullYear(),
+      month: m || now.getMonth() + 1,
+      day: d || now.getDate()
+    };
+  }
+
+  function daysInSolarMonth(year, month) {
+    return new Date(year, month, 0).getDate();
+  }
+
+  function setSolarDatePart(part, value) {
+    const p = parseDateParts(els.solarDate);
+    p[part] = Number(value);
+    const maxDay = daysInSolarMonth(p.year, p.month);
+    p.day = Math.min(p.day, maxDay);
+    els.solarDate.value = `${p.year}-${pad2(p.month)}-${pad2(p.day)}`;
+    updateDateTrigger(els.solarDate);
+  }
+
+  function parseTimeParts(input) {
+    const [h, m] = (input.value || "12:00").split(":").map(Number);
+    return { hour: Number.isFinite(h) ? h : 12, minute: Number.isFinite(m) ? m : 0 };
+  }
+
+  function setTimePart(input, part, value) {
+    const t = parseTimeParts(input);
+    t[part] = Number(value);
+    input.value = `${pad2(t.hour)}:${pad2(t.minute)}`;
+    updateDateTrigger(input);
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function makePartButton(value, unit, onClick) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "date-part-btn";
+    btn.innerHTML = `<span class="date-num">${value}</span><span class="date-unit">${unit}</span>`;
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+
+  function updateDateTrigger(input) {
+    if (!input || !input._dateTrigger) return;
+    input._dateTrigger.innerHTML = "";
+    if (input.id === "solarDate") {
+      const p = parseDateParts(input);
+      input._dateTrigger.append(
+        makePartButton(p.year, "年", () => openValuePicker({
+          title: "选择公历年",
+          values: Array.from({ length: 201 }, (_, i) => String(1900 + i)),
+          current: p.year,
+          scrollToValue: "1980",
+          onPick: v => setSolarDatePart("year", v)
+        })),
+        makePartButton(p.month, "月", () => openValuePicker({
+          title: "选择公历月",
+          values: Array.from({ length: 12 }, (_, i) => String(i + 1)),
+          current: p.month,
+          onPick: v => setSolarDatePart("month", v)
+        })),
+        makePartButton(p.day, "日", () => openValuePicker({
+          title: "选择公历日",
+          values: Array.from({ length: daysInSolarMonth(p.year, p.month) }, (_, i) => String(i + 1)),
+          current: p.day,
+          onPick: v => setSolarDatePart("day", v)
+        }))
+      );
+    } else {
+      const t = parseTimeParts(input);
+      input._dateTrigger.append(
+        makePartButton(pad2(t.hour), "时", () => openValuePicker({
+          title: "选择小时",
+          values: Array.from({ length: 24 }, (_, i) => ({ value: String(i), label: pad2(i) })),
+          current: t.hour,
+          onPick: v => setTimePart(input, "hour", v)
+        })),
+        makePartButton(pad2(t.minute), "分", () => openValuePicker({
+          title: "选择分钟",
+          values: Array.from({ length: 60 }, (_, i) => ({ value: String(i), label: pad2(i) })),
+          current: t.minute,
+          onPick: v => setTimePart(input, "minute", v)
+        }))
+      );
+    }
+  }
+
+  function enhanceDateInput(input) {
+    if (!input || input._dateTrigger) return;
+    input.classList.add("native-date-hidden");
+    input.setAttribute("aria-hidden", "true");
+    input.tabIndex = -1;
+    const trigger = document.createElement("div");
+    trigger.className = input.type === "time" ? "smart-date-row time-row" : "smart-date-row";
+    input.insertAdjacentElement("afterend", trigger);
+    input._dateTrigger = trigger;
+    input.addEventListener("change", () => updateDateTrigger(input));
+    updateDateTrigger(input);
+  }
+
+  function setSolarToNow() {
+    const now = new Date();
+    els.solarDate.value = `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
+    els.solarTime.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    updateDateTrigger(els.solarDate);
+    updateDateTrigger(els.solarTime);
+    showToast("已设为当前公历时间");
+  }
+
+  function setLunarToToday() {
+    const now = new Date();
+    const lunarNow = new Lunar(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+    els.lunarYear.value = String(lunarNow.year);
+    syncLunarControls();
+    els.lunarMonth.value = formatLunarMonthValue(lunarNow.month, lunarNow.isLeap);
+    syncLunarControls();
+    els.lunarDay.value = String(lunarNow.day);
+    els.lunarTime.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    refreshEnhancedControls();
+    updateLunarSolarPreview();
+    showToast("已设为今日农历");
+  }
+
+  function setLunarTimeToNow() {
+    const now = new Date();
+    els.lunarTime.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    updateDateTrigger(els.lunarTime);
+    updateLunarSolarPreview();
+    showToast("已设为当前时间");
+  }
+
+  function syncLunarControls() {
+    if (!els.lunarYear || !els.lunarMonth || !els.lunarDay) return;
+    const y = Number(els.lunarYear.value) || 1900;
+    const previous = parseLunarMonthSelection();
+    const monthOptions = makeLunarMonthOptions(y);
+    const validValues = monthOptions.map(item => item.value);
+    populateSelect(els.lunarMonth, monthOptions);
+
+    let nextMonthValue = formatLunarMonthValue(previous.month, previous.isLeap && leapMonth(y) === previous.month);
+    if (!validValues.includes(nextMonthValue)) nextMonthValue = String(Math.min(Math.max(previous.month || 1, 1), 12));
+    els.lunarMonth.value = nextMonthValue;
+
+    const selected = parseLunarMonthSelection();
+    const maxDay = getLunarMaxDay(y, selected.month, selected.isLeap);
+    const currentDay = Math.min(Number(els.lunarDay.value) || 1, maxDay);
+    populateSelect(els.lunarDay, makeLunarDayOptions(maxDay));
+    els.lunarDay.value = String(currentDay);
+
+    updateAllPickerTriggers();
+    updateLunarSolarPreview();
+  }
+
+  function updateLunarSolarPreview() {
+    if (!els.lunarToSolarPreview || !els.lunarYear || !els.lunarMonth || !els.lunarDay) return;
+    try {
+      const y = Number(els.lunarYear.value);
+      const { month, isLeap } = parseLunarMonthSelection();
+      const d = Number(els.lunarDay.value);
+      const [hh, mm] = (els.lunarTime.value || "12:00").split(":").map(Number);
+      const solarDate = lunarToSolar(y, month, d, isLeap);
+      solarDate.setHours(hh || 0, mm || 0, 0, 0);
+      els.lunarToSolarPreview.value = `${solarDate.getFullYear()}-${pad2(solarDate.getMonth()+1)}-${pad2(solarDate.getDate())} ${pad2(solarDate.getHours())}:${pad2(solarDate.getMinutes())}`;
+    } catch (err) {
+      els.lunarToSolarPreview.value = "当前农历日期不可用";
+    }
+  }
+
+  function refreshEnhancedControls() {
+    updateAllPickerTriggers();
+    updateDateTrigger(els.solarDate);
+    updateDateTrigger(els.solarTime);
+    updateDateTrigger(els.lunarTime);
+    updateLunarSolarPreview();
+  }
+
+  function setupEnhancedInputs() {
+    ensureSmartPickerModal();
+    document.querySelectorAll("select").forEach(enhanceSelect);
+    enhanceDateInput(els.solarDate);
+    enhanceDateInput(els.solarTime);
+    enhanceDateInput(els.lunarTime);
+    syncLunarControls();
+    refreshEnhancedControls();
+  }
+
+
+  function buildOptions() {
+    populateSelect(els.gender, [{value:"男",label:"男"} , {value:"女",label:"女"}]);
+    populateSelect(els.solarGender, [{value:"男",label:"男"} , {value:"女",label:"女"}]);
+    populateSelect(els.lunarGender, [{value:"男",label:"男"} , {value:"女",label:"女"}]);
+    populateSelect(els.nobleMode, NOBLE_MODE_OPTIONS);
+    populateSelect(els.solarNobleMode, NOBLE_MODE_OPTIONS);
+    populateSelect(els.lunarNobleMode, NOBLE_MODE_OPTIONS);
+    [els.divinationBranch, els.solarDivinationBranch, els.lunarDivinationBranch, els.yearBranch, els.monthBranch, els.dayBranch, els.hourBranch]
+      .forEach(el => populateSelect(el, BRANCHES));
+    [els.yearStem, els.monthStem, els.dayStem, els.hourStem]
+      .forEach(el => populateSelect(el, STEMS));
+    const years = [];
+    for (let y = 1900; y <= 2100; y++) years.push(String(y));
+    populateSelect(els.lunarYear, years);
+    populateSelect(els.lunarMonth, makeLunarMonthOptions(new Date().getFullYear()));
+    populateSelect(els.lunarDay, makeLunarDayOptions(30));
+  }
+
+  function initDefaults() {
+    els.gender.value = "男";
+    els.solarGender.value = "男";
+    els.lunarGender.value = "男";
+    els.nobleMode.value = "auto";
+    els.solarNobleMode.value = "auto";
+    els.lunarNobleMode.value = "auto";
+    els.yearStem.value = "甲";
+    els.yearBranch.value = "子";
+    els.monthStem.value = "丙";
+    els.monthBranch.value = "寅";
+    els.dayStem.value = "甲";
+    els.dayBranch.value = "子";
+    els.hourStem.value = "甲";
+    els.hourBranch.value = "子";
+    els.divinationBranch.value = "子";
+    els.solarDivinationBranch.value = "子";
+    els.lunarDivinationBranch.value = "子";
+
+    const now = new Date();
+    els.solarDate.value = `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
+    els.solarTime.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    els.lunarTime.value = els.solarTime.value;
+    const branchNow = getHourBranchFrom24(now.getHours());
+    els.divinationBranch.value = branchNow;
+    els.solarDivinationBranch.value = branchNow;
+    els.lunarDivinationBranch.value = branchNow;
+    els.hourBranch.value = branchNow;
+    syncAllManualBranchOptions();
+
+    const lunarNow = new Lunar(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+    els.lunarYear.value = String(lunarNow.year);
+    syncLunarControls();
+    els.lunarMonth.value = formatLunarMonthValue(lunarNow.month, lunarNow.isLeap);
+    syncLunarControls();
+    els.lunarDay.value = String(lunarNow.day);
+    refreshEnhancedControls();
+  }
+
+  function switchMode(mode) {
+    activeInputMode = mode;
+    [...els.inputModeBar.querySelectorAll("button")].forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+    els.manualPane.classList.toggle("hide", mode !== "manual");
+    els.solarPane.classList.toggle("hide", mode !== "solar");
+    els.lunarPane.classList.toggle("hide", mode !== "lunar");
+    refreshEnhancedControls();
+  }
+
+  function getSequenceFrom(start, source, len = 12) {
+    const idx = source.indexOf(start);
+    if (idx === -1) throw new Error(`序列中不存在：${start}`);
+    return Array.from({length: len}, (_, i) => source[(idx + i) % source.length]);
+  }
+
+  function buildCycleFromStem(stem, len = 12) {
+    const idx = STEMS.indexOf(stem);
+    if (idx === -1) throw new Error(`无效日干：${stem}`);
+    return Array.from({length: len}, (_, i) => STEMS[(idx + i) % STEMS.length]);
+  }
+
+  function placeByDirection(items, anchorIndex, direction) {
+    const placed = Array(12).fill("");
+    items.forEach((item, offset) => {
+      const idx = mod(anchorIndex + direction * offset, 12);
+      placed[idx] = item;
+    });
+    return placed;
+  }
+
+  function computeMonthGeneral(yearBranch, monthBranch, dayBranch, hourBranch) {
+    const total = BRANCH_VALUE_MAIN[yearBranch] + BRANCH_VALUE_MAIN[monthBranch] + BRANCH_VALUE_MAIN[dayBranch] + BRANCH_VALUE_HOUR[hourBranch];
+    const rem = total % 12 || 12;
+    return {
+      total,
+      rem,
+      branch: MONTH_GENERAL_MAP[rem],
+      name: MONTH_GENERAL_NAME[MONTH_GENERAL_MAP[rem]]
+    };
+  }
+
+  function getTimePhaseFromBranch(divinationBranch) {
+    return DAY_NOBLE_BRANCHES.has(divinationBranch) ? "白天" : "晚上";
+  }
+
+  function computeNoble(dayStem, divinationBranch, nobleMode = "auto") {
+    const pair = NOBLE_MAP[dayStem];
+    if (!pair) throw new Error("日干贵人映射不存在");
+    const timePhase = getTimePhaseFromBranch(divinationBranch);
+    const resolvedMode = nobleMode === "auto"
+      ? (timePhase === "白天" ? "yang" : "yin")
+      : nobleMode;
+    const nobleType = resolvedMode === "yang" ? "阳贵人" : "阴贵人";
+    return {
+      timePhase,
+      nobleType,
+      mode: resolvedMode,
+      modeText: nobleMode === "auto" ? "默认（按占卜之时）" : `强制${nobleType}`,
+      branch: resolvedMode === "yang" ? pair[0] : pair[1],
+      pair,
+      pairText: `阳贵人：${pair[0]} / 阴贵人：${pair[1]}`
+    };
+  }
+
+  function calculatePlate(inputs) {
+    const direction = inputs.gender === "男" ? 1 : -1;
+    const anchorIndex = PALACES.indexOf(inputs.divinationBranch);
+    if (anchorIndex === -1) throw new Error("占卜之时不在固定宫位中");
+    const mg = computeMonthGeneral(inputs.yearBranch, inputs.monthBranch, inputs.dayBranch, inputs.hourBranch);
+    const secondSeq = getSequenceFrom(mg.branch, BRANCHES, 12);
+    const secondLayer = placeByDirection(secondSeq, anchorIndex, direction);
+
+    const noble = computeNoble(inputs.dayStem, inputs.divinationBranch, inputs.nobleMode || "auto");
+    const nobleAnchor = secondLayer.indexOf(noble.branch);
+    const thirdLayer = placeByDirection(GENERALS, nobleAnchor, direction);
+
+    // 第四层天干层：以日干起始，在第二层找到日支所在宫，再按男女顺逆排。
+    const fourthSeq = buildCycleFromStem(inputs.dayStem, 12);
+    const dayBranchAnchor = secondLayer.indexOf(inputs.dayBranch);
+    const fourthLayer = placeByDirection(fourthSeq, dayBranchAnchor, direction);
+
+    const cells = PALACES.map((palace, i) => ({
+      palace,
+      monthGeneralBranch: secondLayer[i],
+      general: thirdLayer[i],
+      stem: fourthLayer[i]
+    }));
+
+    return {
+      inputs,
+      direction,
+      directionText: direction === 1 ? "男顺排" : "女逆排",
+      monthGeneral: mg,
+      noble,
+      secondLayer,
+      thirdLayer,
+      fourthLayer,
+      cells
+    };
+  }
+
+  function renderPlate(result) {
+    els.plateCanvas.innerHTML = "";
+
+    const rect = els.plateCanvas.getBoundingClientRect();
+    const size = Math.max(280, Math.min(rect.width || els.plateCanvas.clientWidth || window.innerWidth - 24, 620));
+    const compact = size <= 380;
+    const ultraCompact = size <= 335;
+
+    const config = {
+      topY: ultraCompact ? 34.4 : compact ? 34.0 : 33.4,
+      rightX: ultraCompact ? 65.6 : compact ? 66.0 : 66.6,
+      bottomY: ultraCompact ? 65.6 : compact ? 66.0 : 66.6,
+      leftX: ultraCompact ? 34.4 : compact ? 34.0 : 33.4,
+      topXs: ultraCompact ? [45.6, 50.0, 54.4] : compact ? [45.0, 50.0, 55.0] : [44.5, 50.0, 55.5],
+      sideYs: ultraCompact ? [45.6, 50.0, 54.4] : compact ? [45.0, 50.0, 55.0] : [44.5, 50.0, 55.5],
+      stepMonth: Math.round(size * (ultraCompact ? 0.060 : compact ? 0.064 : 0.068)),
+      stepGeneral: Math.round(size * (ultraCompact ? 0.118 : compact ? 0.124 : 0.132)),
+      stepStem: Math.round(size * (ultraCompact ? 0.176 : compact ? 0.186 : 0.198)),
+      font1: Math.round(size * (ultraCompact ? 0.050 : compact ? 0.052 : 0.050)),
+      font2: Math.round(size * (ultraCompact ? 0.050 : compact ? 0.052 : 0.050)),
+      font3: Math.round(size * (ultraCompact ? 0.048 : compact ? 0.050 : 0.048)),
+      font4: Math.round(size * (ultraCompact ? 0.048 : compact ? 0.049 : 0.047))
+    };
+
+    const slots = [
+      { x: config.topXs[0], y: config.topY, dx: 0, dy: -1 },
+      { x: config.topXs[1], y: config.topY, dx: 0, dy: -1 },
+      { x: config.topXs[2], y: config.topY, dx: 0, dy: -1 },
+      { x: config.rightX, y: config.sideYs[0], dx: 1, dy: 0 },
+      { x: config.rightX, y: config.sideYs[1], dx: 1, dy: 0 },
+      { x: config.rightX, y: config.sideYs[2], dx: 1, dy: 0 },
+      { x: config.topXs[2], y: config.bottomY, dx: 0, dy: 1 },
+      { x: config.topXs[1], y: config.bottomY, dx: 0, dy: 1 },
+      { x: config.topXs[0], y: config.bottomY, dx: 0, dy: 1 },
+      { x: config.leftX, y: config.sideYs[2], dx: -1, dy: 0 },
+      { x: config.leftX, y: config.sideYs[1], dx: -1, dy: 0 },
+      { x: config.leftX, y: config.sideYs[0], dx: -1, dy: 0 }
+    ];
+
+    const layers = [
+      { className: "ring-1", distance: 0, fontSize: config.font1, values: result.cells.map(c => c.palace) },
+      { className: "ring-2", distance: config.stepMonth, fontSize: config.font2, values: result.cells.map(c => c.monthGeneralBranch || "—") },
+      { className: "ring-3", distance: config.stepGeneral, fontSize: config.font3, values: result.cells.map(c => c.general || "—") },
+      { className: "ring-4", distance: config.stepStem, fontSize: config.font4, values: result.cells.map(c => c.stem || "—") }
+    ];
+
+    layers.forEach(layer => {
+      layer.values.forEach((value, i) => {
+        const slot = slots[i];
+        const node = document.createElement("div");
+        const box = Math.max(26, Math.round(layer.fontSize * 1.72));
+        node.className = `ring-char ${layer.className}`;
+        node.textContent = value;
+        node.style.left = `calc(${slot.x}% + ${slot.dx * layer.distance}px)`;
+        node.style.top = `calc(${slot.y}% + ${slot.dy * layer.distance}px)`;
+        node.style.width = `${box}px`;
+        node.style.height = `${box}px`;
+        node.style.lineHeight = `${box}px`;
+        node.style.fontSize = `${layer.fontSize}px`;
+        els.plateCanvas.appendChild(node);
+      });
+    });
+
+    els.summaryMonthGeneral.textContent = `${result.monthGeneral.branch}·${result.monthGeneral.name}`;
+    els.summaryNoble.textContent = result.noble.branch;
+    els.summaryDayNight.textContent = result.noble.timePhase;
+    els.summaryDirection.textContent = result.direction === 1 ? "顺排" : "逆排";
+  }
+
+  function buildResultText(result) {
+    const lines = [];
+    const p = result.inputs;
+    lines.push(`性别：${p.gender}`);
+    lines.push(`四柱：${p.yearStem}${p.yearBranch} / ${p.monthStem}${p.monthBranch} / ${p.dayStem}${p.dayBranch} / ${p.hourStem}${p.hourBranch}`);
+    lines.push(`占卜之时：${p.divinationBranch}`);
+    if (p.convertedFrom) lines.push(`辅助换算：${p.convertedFrom}`);
+    lines.push("");
+    lines.push(`月将：${result.monthGeneral.branch}（${result.monthGeneral.name}）`);
+    lines.push(`四支合数：${result.monthGeneral.total}，对12取余：${result.monthGeneral.rem}`);
+    lines.push(`贵人模式：${result.noble.modeText}`);
+    lines.push(`昼夜判定：${result.noble.timePhase}`);
+    lines.push(`贵人候选：${result.noble.pairText}`);
+    lines.push(`当前取用：${result.noble.nobleType}：${result.noble.branch}`);
+    lines.push(`方向：${result.directionText}`);
+    lines.push("");
+    lines.push("十二宫：");
+    result.cells.forEach(cell => {
+      lines.push(`${cell.palace}宫｜月将地支：${cell.monthGeneralBranch}｜天将：${cell.general}｜天干：${cell.stem}`);
+    });
+    return lines.join("\n");
+  }
+
+  function collectManualInputs() {
+    const input = {
+      gender: els.gender.value,
+      yearStem: els.yearStem.value,
+      yearBranch: els.yearBranch.value,
+      monthStem: els.monthStem.value,
+      monthBranch: els.monthBranch.value,
+      dayStem: els.dayStem.value,
+      dayBranch: els.dayBranch.value,
+      hourStem: els.hourStem.value,
+      hourBranch: els.hourBranch.value,
+      divinationBranch: els.divinationBranch.value,
+      nobleMode: els.nobleMode.value || "auto"
+    };
+    if (latestConvertedText) input.convertedFrom = latestConvertedText;
+    return input;
+  }
+
+  function validateInputs(input) {
+    const required = ["gender","yearStem","yearBranch","monthStem","monthBranch","dayStem","dayBranch","hourStem","hourBranch","divinationBranch"];
+    for (const key of required) {
+      if (!input[key]) throw new Error("请先完整填写全部输入项");
+    }
+  }
+
+  function scrollToEl(el) {
+    if (!el) return;
+    const y = window.pageYOffset + el.getBoundingClientRect().top - 8;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+  }
+
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        resolve(result.includes(",") ? result.split(",")[1] : result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+
+  function openModal(modal) {
+    if (!modal) return;
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  function closeAllModals() {
+    [els.textModal, els.spiritModal, els.recordModal, els.historyModal, smartPickerModal].forEach(closeModal);
+  }
+
+  function setPageState(state) {
+    closeAllModals();
+    document.body.classList.remove("state-input", "state-loading", "state-result");
+    document.body.classList.add(`state-${state}`);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  }
+
+  function showTransitionThenResult(message = "排盘完成") {
+    setPageState("loading");
+    clearTimeout(showTransitionThenResult._timer);
+    showTransitionThenResult._timer = setTimeout(() => {
+      setPageState("result");
+      requestAnimationFrame(() => {
+        if (latestResult) renderPlate(latestResult);
+      });
+      showToast(message);
+    }, 900);
+  }
+
+  function goToPlate() {
+    setPageState("result");
+    requestAnimationFrame(() => {
+      if (latestResult) renderPlate(latestResult);
+    });
+  }
+
+  function goToInput() {
+    setPageState("input");
+  }
+
+  function runCalculation() {
+    try {
+      const input = collectManualInputs();
+      validateInputs(input);
+      latestResult = calculatePlate(input);
+      renderPlate(latestResult);
+      els.resultText.textContent = buildResultText(latestResult);
+      showTransitionThenResult("排盘完成");
+    } catch (err) {
+      showToast(err.message || "排盘失败");
+    }
+  }
+
+  function applyConvertedPillars(payload, extraText = "") {
+    latestConvertedText = extraText || "";
+    els.gender.value = payload.gender;
+    els.divinationBranch.value = payload.divinationBranch;
+    els.nobleMode.value = payload.nobleMode || "auto";
+    els.yearStem.value = payload.yearStem;
+    els.yearBranch.value = payload.yearBranch;
+    els.monthStem.value = payload.monthStem;
+    els.monthBranch.value = payload.monthBranch;
+    els.dayStem.value = payload.dayStem;
+    els.dayBranch.value = payload.dayBranch;
+    els.hourStem.value = payload.hourStem;
+    els.hourBranch.value = payload.hourBranch;
+    syncAllManualBranchOptions();
+    els.yearBranch.value = payload.yearBranch;
+    els.monthBranch.value = payload.monthBranch;
+    els.dayBranch.value = payload.dayBranch;
+    els.hourBranch.value = payload.hourBranch;
+    refreshEnhancedControls();
+
+    switchMode("manual");
+    setPageState("input");
+    showToast("已回填四柱");
+  }
+
+  function lYearDays(y) {
+    let sum = 348;
+    for (let i = 0x8000; i > 0x8; i >>= 1) sum += (lunarInfo[y - 1900] & i) ? 1 : 0;
+    return sum + leapDays(y);
+  }
+
+  function leapDays(y) {
+    if (leapMonth(y)) return (lunarInfo[y - 1899] & 0xf) === 0xf ? 30 : 29;
+    return 0;
+  }
+
+  function leapMonth(y) {
+    const lm = lunarInfo[y - 1900] & 0xf;
+    return lm === 0xf ? 0 : lm;
+  }
+
+  function monthDays(y, m) {
+    return (lunarInfo[y - 1900] & (0x10000 >> m)) ? 30 : 29;
+  }
+
+  function Lunar(objDate) {
+    let i;
+    let leap = 0;
+    let temp = 0;
+    let offset = (Date.UTC(objDate.getFullYear(), objDate.getMonth(), objDate.getDate()) - Date.UTC(1900, 0, 31)) / 86400000;
+    for (i = 1900; i < 2101 && offset > 0; i++) {
+      temp = lYearDays(i);
+      offset -= temp;
+    }
+    if (offset < 0) {
+      offset += temp;
+      i--;
+    }
+    this.year = i;
+    leap = leapMonth(i);
+    this.isLeap = false;
+    for (i = 1; i < 13 && offset > 0; i++) {
+      if (leap > 0 && i === (leap + 1) && this.isLeap === false) {
+        --i;
+        this.isLeap = true;
+        temp = leapDays(this.year);
+      } else {
+        temp = monthDays(this.year, i);
+      }
+      if (this.isLeap === true && i === (leap + 1)) this.isLeap = false;
+      offset -= temp;
+    }
+    if (offset === 0 && leap > 0 && i === leap + 1) {
+      if (this.isLeap) this.isLeap = false;
+      else {
+        this.isLeap = true;
+        --i;
+      }
+    }
+    if (offset < 0) {
+      offset += temp;
+      --i;
+    }
+    this.month = i;
+    this.day = offset + 1;
+  }
+
+  function cyclical(num) {
+    return STEMS[num % 10] + BRANCHES[num % 12];
+  }
+
+  function sTerm(y, n) {
+    return solarTermBase[n] + Math.floor(Number(solarTermOS.charAt((solarTermIdx.charCodeAt(y - 1900) - 48) * 24 + n)));
+  }
+
+  function getSolarGanzhi(date) {
+    const y = date.getFullYear();
+    const m = date.getMonth();
+    const d = date.getDate();
+
+    let cY = m < 2 ? cyclical(y - 1900 + 35) : cyclical(y - 1900 + 36);
+    const term2 = sTerm(y, 2);
+    if (m === 1 && d >= term2) cY = cyclical(y - 1900 + 36);
+
+    const firstNode = sTerm(y, m * 2);
+    let cM = cyclical((y - 1900) * 12 + m + 12);
+    if (d >= firstNode) cM = cyclical((y - 1900) * 12 + m + 13);
+
+    const dayCyclical = Date.UTC(y, m, d, 0, 0, 0, 0) / 86400000 + 25567 + 10;
+    const cD = cyclical(dayCyclical);
+
+    return { year: cY, month: cM, day: cD };
+  }
+
+  function getHourBranchFrom24(hour) {
+    if (hour === 23 || hour === 0) return "子";
+    if (hour === 1 || hour === 2) return "丑";
+    if (hour === 3 || hour === 4) return "寅";
+    if (hour === 5 || hour === 6) return "卯";
+    if (hour === 7 || hour === 8) return "辰";
+    if (hour === 9 || hour === 10) return "巳";
+    if (hour === 11 || hour === 12) return "午";
+    if (hour === 13 || hour === 14) return "未";
+    if (hour === 15 || hour === 16) return "申";
+    if (hour === 17 || hour === 18) return "酉";
+    if (hour === 19 || hour === 20) return "戌";
+    return "亥";
+  }
+
+  function getHourStem(dayStem, hourBranch) {
+    const base = {
+      "甲":0,"己":0,
+      "乙":2,"庚":2,
+      "丙":4,"辛":4,
+      "丁":6,"壬":6,
+      "戊":8,"癸":8
+    }[dayStem];
+    const hourIndex = BRANCHES.indexOf(hourBranch);
+    return STEMS[(base + hourIndex) % 10];
+  }
+
+  function parseDateTime(dateStr, timeStr) {
+    if (!dateStr) throw new Error("请先选择日期");
+    const [y,m,d] = dateStr.split("-").map(Number);
+    const [hh,mm] = (timeStr || "12:00").split(":").map(Number);
+    return new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+  }
+
+  function convertSolarToPillars(date, gender, divinationBranch, nobleMode = "auto") {
+    const lunar = new Lunar(date);
+    const gz = getSolarGanzhi(date);
+    const hourBranch = getHourBranchFrom24(date.getHours());
+    const hourStem = getHourStem(gz.day[0], hourBranch);
+    return {
+      gender,
+      divinationBranch,
+      nobleMode,
+      yearStem: gz.year[0],
+      yearBranch: gz.year[1],
+      monthStem: gz.month[0],
+      monthBranch: gz.month[1],
+      dayStem: gz.day[0],
+      dayBranch: gz.day[1],
+      hourStem,
+      hourBranch,
+      solarText: `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`,
+      lunarText: `农历${lunar.year}年${lunar.isLeap ? "闰" : ""}${lunar.month}月${lunar.day}日`
+    };
+  }
+
+  function lunarToSolar(y, m, d, isLeap) {
+    if (y < 1900 || y > 2100) throw new Error("农历年份仅支持 1900-2100");
+    const lm = leapMonth(y);
+    if (isLeap && lm !== m) throw new Error(`该年无闰${m}月`);
+    const max = isLeap ? leapDays(y) : monthDays(y, m);
+    if (d < 1 || d > max) throw new Error(`该农历日期超出范围，最大为${max}日`);
+
+    let offset = 0;
+    for (let i = 1900; i < y; i++) offset += lYearDays(i);
+    for (let i = 1; i < m; i++) {
+      offset += monthDays(y, i);
+      if (lm && i === lm) offset += leapDays(y);
+    }
+    if (isLeap) offset += monthDays(y, m);
+    offset += d - 1;
+
+    const base = Date.UTC(1900, 0, 31);
+    const res = new Date(base + offset * 86400000);
+    return new Date(res.getUTCFullYear(), res.getUTCMonth(), res.getUTCDate(), 0, 0, 0, 0);
+  }
+
+  function onFillFromSolar() {
+    try {
+      const date = parseDateTime(els.solarDate.value, els.solarTime.value);
+      const payload = convertSolarToPillars(date, els.solarGender.value, els.solarDivinationBranch.value, els.solarNobleMode.value || "auto");
+      applyConvertedPillars(payload, `公历${payload.solarText}；${payload.lunarText}`);
+    } catch (err) {
+      showToast(err.message || "公历换算失败");
+    }
+  }
+
+  function onFillFromLunar() {
+    try {
+      const y = Number(els.lunarYear.value);
+      const { month, isLeap } = parseLunarMonthSelection();
+      const d = Number(els.lunarDay.value);
+      const [hh, mm] = (els.lunarTime.value || "12:00").split(":").map(Number);
+      const solarDate = lunarToSolar(y, month, d, isLeap);
+      solarDate.setHours(hh || 0, mm || 0, 0, 0);
+      updateLunarSolarPreview();
+      refreshEnhancedControls();
+      const payload = convertSolarToPillars(solarDate, els.lunarGender.value, els.lunarDivinationBranch.value, els.lunarNobleMode.value || "auto");
+      applyConvertedPillars(payload, `农历${y}年${lunarMonthLabel(month, isLeap)}${lunarDayLabel(d)}，换算公历${payload.solarText}`);
+    } catch (err) {
+      showToast(err.message || "农历换算失败");
+    }
+  }
+
+  function doReset() {
+    initDefaults();
+    latestResult = null;
+    latestConvertedText = "";
+    els.noteInput.value = "";
+    updateLunarSolarPreview();
+    els.resultText.textContent = "请先输入信息后点击“一键排盘”。";
+    els.summaryMonthGeneral.textContent = "—";
+    els.summaryNoble.textContent = "—";
+    els.summaryDayNight.textContent = "—";
+    els.summaryDirection.textContent = "—";
+    renderEmptyPlate();
+    goToInput();
+    showToast("已重置");
+  }
+
+  function renderEmptyPlate() {
+    const empty = {
+      monthGeneral: {branch:"—", name:"—"},
+      noble: {branch:"—", timePhase:"—", nobleType:"—", modeText:"—", pairText:"—"},
+      inputs: {dayStem:"—", dayBranch:"—", divinationBranch:"—"},
+      direction: 1,
+      directionText: "—",
+      cells: PALACES.map(p => ({ palace:p, monthGeneralBranch:"", general:"", stem:"" }))
+    };
+    renderPlate(empty);
+  }
+
+  async function copyText() {
+    const text = els.resultText.textContent.trim();
+    if (!text || text.startsWith("请先输入")) return showToast("暂无可复制内容");
+    if (hasAndroidBridge()) {
+      callAndroid("copyText", text);
+      return showToast("已复制到剪贴板");
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("已复制到剪贴板");
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      showToast("已复制到剪贴板");
+    }
+  }
+
+  function drawRoundRect(ctx, x, y, w, h, r) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+  }
+
+  async function downloadPngBlob(blob, filename) {
+    if (hasAndroidBridge()) {
+      try {
+        const base64 = await blobToBase64(blob);
+        const ok = callAndroid("saveBase64File", filename, base64, "image/png");
+        if (ok !== false) return true;
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    if (typeof File !== "undefined" && navigator.canShare && navigator.share) {
+      const file = new File([blob], filename, { type: "image/png" });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "时空卦排盘图片" });
+          return true;
+        } catch (err) {
+          if (err && err.name === "AbortError") return false;
+        }
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    return true;
+  }
+
+  async function savePlateImage() {
+    try {
+      if (!latestResult) {
+        showToast("请先排盘后再保存图片");
+        return;
+      }
+
+      const filename = `时空卦排盘_${Date.now()}.png`;
+      const cssScale = 2;
+      const width = 960;
+      const height = 1240;
+      const canvas = document.createElement("canvas");
+      canvas.width = width * cssScale;
+      canvas.height = height * cssScale;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(cssScale, cssScale);
+      ctx.fillStyle = "#f5f1e8";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#1f1f1f";
+      ctx.font = '900 42px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.fillText("时空卦四层十二宫", width / 2, 74);
+      ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.fillStyle = "#7d786f";
+      ctx.fillText(new Date().toLocaleString("zh-CN", { hour12: false }), width / 2, 114);
+
+      const summary = [
+        ["月将", `${latestResult.monthGeneral.branch}·${latestResult.monthGeneral.name}`],
+        ["贵人", latestResult.noble.branch],
+        ["昼夜", latestResult.noble.timePhase],
+        ["方向", latestResult.direction === 1 ? "顺排" : "逆排"]
+      ];
+      const cardY = 154;
+      const cardW = 205;
+      const gap = 18;
+      const startX = (width - cardW * 4 - gap * 3) / 2;
+      summary.forEach(([k, v], i) => {
+        const x = startX + i * (cardW + gap);
+        drawRoundRect(ctx, x, cardY, cardW, 88, 18);
+        ctx.fillStyle = "#faf7ef";
+        ctx.fill();
+        ctx.strokeStyle = "#e5ded0";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.font = '700 19px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+        ctx.fillStyle = "#7d786f";
+        ctx.fillText(k, x + cardW / 2, cardY + 27);
+        ctx.font = '900 25px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+        ctx.fillStyle = "#1f1f1f";
+        ctx.fillText(v, x + cardW / 2, cardY + 61);
+      });
+
+      const plateSize = 680;
+      const plateX = (width - plateSize) / 2;
+      const plateY = 292;
+      drawRoundRect(ctx, plateX, plateY, plateSize, plateSize, 30);
+      ctx.fillStyle = "#f7f2e8";
+      ctx.fill();
+      ctx.strokeStyle = "#ddd4c4";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const slots = [
+        { x: 44.5, y: 33.4, dx: 0, dy: -1 },
+        { x: 50.0, y: 33.4, dx: 0, dy: -1 },
+        { x: 55.5, y: 33.4, dx: 0, dy: -1 },
+        { x: 66.6, y: 44.5, dx: 1, dy: 0 },
+        { x: 66.6, y: 50.0, dx: 1, dy: 0 },
+        { x: 66.6, y: 55.5, dx: 1, dy: 0 },
+        { x: 55.5, y: 66.6, dx: 0, dy: 1 },
+        { x: 50.0, y: 66.6, dx: 0, dy: 1 },
+        { x: 44.5, y: 66.6, dx: 0, dy: 1 },
+        { x: 33.4, y: 55.5, dx: -1, dy: 0 },
+        { x: 33.4, y: 50.0, dx: -1, dy: 0 },
+        { x: 33.4, y: 44.5, dx: -1, dy: 0 }
+      ];
+      const layers = [
+        { color: "#111111", distance: 0, font: 38, values: latestResult.cells.map(c => c.palace) },
+        { color: "#111111", distance: Math.round(plateSize * 0.068), font: 38, values: latestResult.cells.map(c => c.monthGeneralBranch || "—") },
+        { color: "#2f87ff", distance: Math.round(plateSize * 0.132), font: 36, values: latestResult.cells.map(c => c.general || "—") },
+        { color: "#5c4835", distance: Math.round(plateSize * 0.198), font: 36, values: latestResult.cells.map(c => c.stem || "—") }
+      ];
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      layers.forEach(layer => {
+        ctx.fillStyle = layer.color;
+        ctx.font = `800 ${layer.font}px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        layer.values.forEach((value, i) => {
+          const slot = slots[i];
+          const x = plateX + plateSize * slot.x / 100 + slot.dx * layer.distance;
+          const y = plateY + plateSize * slot.y / 100 + slot.dy * layer.distance;
+          ctx.fillText(value, x, y);
+        });
+      });
+
+      const p = latestResult.inputs;
+      const footerY = 1018;
+      drawRoundRect(ctx, 70, footerY, width - 140, 140, 22);
+      ctx.fillStyle = "#faf7ef";
+      ctx.fill();
+      ctx.strokeStyle = "#e5ded0";
+      ctx.stroke();
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#1f1f1f";
+      ctx.font = '800 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.fillText(`四柱：${p.yearStem}${p.yearBranch} / ${p.monthStem}${p.monthBranch} / ${p.dayStem}${p.dayBranch} / ${p.hourStem}${p.hourBranch}`, 100, footerY + 42);
+      ctx.font = '700 21px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.fillStyle = "#7d786f";
+      ctx.fillText(`性别：${p.gender}    占卜之时：${p.divinationBranch}    贵人模式：${latestResult.noble.modeText}`, 100, footerY + 82);
+      ctx.fillText("本图片由离线排盘工具生成", 100, footerY + 116);
+
+      canvas.toBlob(async blob => {
+        if (!blob) {
+          showToast("图片生成失败");
+          return;
+        }
+        const saved = await downloadPngBlob(blob, filename);
+        showToast(saved ? "图片已生成，请在下载/分享中保存" : "已取消保存图片");
+      }, "image/png", 0.96);
+    } catch (err) {
+      console.warn(err);
+      showToast(err.message || "导出图片失败");
+    }
+  }
+
+  function loadHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory(list) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  }
+
+  function saveCurrentRecord() {
+    if (!latestResult) return showToast("请先排盘后再保存");
+    const list = loadHistory();
+    list.unshift({
+      id: String(Date.now()),
+      createdAt: new Date().toISOString(),
+      title: `${latestResult.inputs.yearStem}${latestResult.inputs.yearBranch} / ${latestResult.inputs.monthStem}${latestResult.inputs.monthBranch} / ${latestResult.inputs.dayStem}${latestResult.inputs.dayBranch} / ${latestResult.inputs.hourStem}${latestResult.inputs.hourBranch}`,
+      note: els.noteInput.value.trim(),
+      text: els.resultText.textContent
+    });
+    saveHistory(list);
+    renderHistory();
+    closeModal(els.recordModal);
+    els.noteInput.value = "";
+    showToast("记录已保存到本地");
+  }
+
+  function renderHistory() {
+    const list = loadHistory();
+    if (!list.length) {
+      els.historyList.innerHTML = `<div class="empty">暂无本地记录。</div>`;
+      return;
+    }
+    els.historyList.innerHTML = "";
+    list.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      const dt = new Date(item.createdAt);
+      div.innerHTML = `
+        <div class="history-top">
+          <div>
+            <div class="history-title">${item.title}</div>
+            <div class="history-time">${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())} ${pad2(dt.getHours())}:${pad2(dt.getMinutes())}</div>
+          </div>
+        </div>
+        ${item.note ? `<div class="history-note">${escapeHtml(item.note)}</div>` : ""}
+        <div class="history-text">${escapeHtml(item.text)}</div>
+        <div class="history-actions">
+          <button type="button" class="btn soft" data-action="copy" data-id="${item.id}">复制</button>
+          <button type="button" class="btn danger" data-action="delete" data-id="${item.id}">删除</button>
+        </div>
+      `;
+      els.historyList.appendChild(div);
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function deleteHistoryItem(id) {
+    const list = loadHistory().filter(item => item.id !== id);
+    saveHistory(list);
+    renderHistory();
+    showToast("已删除");
+  }
+
+  async function copyHistoryText(id) {
+    const item = loadHistory().find(x => x.id === id);
+    if (!item) return;
+    try {
+      await navigator.clipboard.writeText(item.text);
+      showToast("记录已复制");
+    } catch {
+      showToast("复制失败");
+    }
+  }
+
+  function clearHistory() {
+    if (!confirm("确认清空全部本地记录吗？")) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+    showToast("记录已清空");
+  }
+
+  async function exportHistoryText() {
+    const list = loadHistory();
+    if (!list.length) return showToast("暂无可导出的记录");
+    const text = list.map((item, idx) => [
+      `# 记录${idx+1}`,
+      `时间：${item.createdAt}`,
+      item.note ? `备注：${item.note}` : "",
+      item.text,
+      ""
+    ].filter(Boolean).join("\n")).join("\n");
+    const filename = `时空卦本地记录_${Date.now()}.txt`;
+    if (hasAndroidBridge()) {
+      callAndroid("saveTextFile", filename, text, "text/plain;charset=utf-8");
+      return showToast("记录文本已保存");
+    }
+    const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("记录文本已导出");
+  }
+
+
+  function escapeHtml(text) {
+    return String(text ?? "").replace(/[&<>"']/g, ch => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    }[ch]));
+  }
+
+  function renderSpiritGuide() {
+    if (!els.spiritGuideList) return;
+    const note = '<div class="spirit-note">十二神取象要结合落宫、月将、天干、四柱和当前问题一起看。这里是排盘时的速查提示，帮助快速记忆，不作为单独断事结论。</div>';
+    const cards = SPIRIT_MEANINGS.map(item => {
+      const tags = item.tags.map(tag => '<span class="spirit-tag">' + escapeHtml(tag) + '</span>').join("");
+      return [
+        '<div class="spirit-card">',
+          '<div class="spirit-symbol">' + escapeHtml(item.key) + '</div>',
+          '<div>',
+            '<div class="spirit-name">' + escapeHtml(item.name) + '</div>',
+            '<div class="spirit-meaning">' + escapeHtml(item.meaning) + '</div>',
+            '<div class="spirit-tags">' + tags + '</div>',
+          '</div>',
+        '</div>'
+      ].join("");
+    }).join("");
+    els.spiritGuideList.innerHTML = note + cards;
+  }
+
+  function openSpiritGuide() {
+    renderSpiritGuide();
+    openModal(els.spiritModal);
+  }
+
+  function openResultText() {
+    if (!latestResult) return showToast("请先排盘后再查看文本");
+    openModal(els.textModal);
+  }
+
+  function openRecordModal() {
+    if (!latestResult) return showToast("请先排盘后再保存");
+    openModal(els.recordModal);
+  }
+
+  function openHistoryModal() {
+    renderHistory();
+    openModal(els.historyModal);
+  }
+
+  function bindEvents() {
+    els.inputModeBar.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-mode]");
+      if (!btn) return;
+      switchMode(btn.dataset.mode);
+    });
+    els.calcBtn.addEventListener("click", runCalculation);
+    els.recalcBtn.addEventListener("click", runCalculation);
+    els.backToInputBtn.addEventListener("click", goToInput);
+    els.historyBtn.addEventListener("click", openHistoryModal);
+    els.resetBtn.addEventListener("click", doReset);
+    els.fillFromSolar.addEventListener("click", onFillFromSolar);
+    els.fillFromLunar.addEventListener("click", onFillFromLunar);
+    els.solarTodayBtn.addEventListener("click", () => {
+      const now = new Date();
+      els.solarDate.value = `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
+      updateDateTrigger(els.solarDate);
+      showToast("已设为今天");
+    });
+    els.solarNowBtn.addEventListener("click", setSolarToNow);
+    els.lunarTodayBtn.addEventListener("click", setLunarToToday);
+    els.lunarNowBtn.addEventListener("click", setLunarTimeToNow);
+    [els.lunarYear, els.lunarMonth].forEach(el => {
+      el.addEventListener("change", syncLunarControls);
+    });
+    els.lunarDay.addEventListener("change", updateLunarSolarPreview);
+    els.lunarTime.addEventListener("change", updateLunarSolarPreview);
+    [
+      [els.yearStem, els.yearBranch],
+      [els.monthStem, els.monthBranch],
+      [els.dayStem, els.dayBranch],
+      [els.hourStem, els.hourBranch]
+    ].forEach(([stemEl, branchEl]) => {
+      stemEl.addEventListener("change", () => syncManualBranchOptions(stemEl, branchEl));
+    });
+    els.openTextBtn.addEventListener("click", openResultText);
+    els.spiritGuideBtn.addEventListener("click", openSpiritGuide);
+    els.closeSpiritModalBtn.addEventListener("click", () => closeModal(els.spiritModal));
+    els.closeSpiritModalBtn2.addEventListener("click", () => closeModal(els.spiritModal));
+    els.copyTextInModalBtn.addEventListener("click", copyText);
+    els.closeTextModalBtn.addEventListener("click", () => closeModal(els.textModal));
+    els.closeTextModalBtn2.addEventListener("click", () => closeModal(els.textModal));
+    els.imageBtn.addEventListener("click", savePlateImage);
+    els.saveRecordBtn.addEventListener("click", openRecordModal);
+    els.saveRecordConfirmBtn.addEventListener("click", saveCurrentRecord);
+    els.closeRecordModalBtn.addEventListener("click", () => closeModal(els.recordModal));
+    els.closeRecordModalBtn2.addEventListener("click", () => closeModal(els.recordModal));
+    els.closeHistoryModalBtn.addEventListener("click", () => closeModal(els.historyModal));
+    els.closeHistoryModalBtn2.addEventListener("click", () => closeModal(els.historyModal));
+    els.clearHistoryBtn.addEventListener("click", clearHistory);
+    els.exportHistoryBtn.addEventListener("click", exportHistoryText);
+    [els.textModal, els.spiritModal, els.recordModal, els.historyModal].forEach(modal => {
+      modal.addEventListener("click", e => {
+        if (e.target === modal) closeModal(modal);
+      });
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeAllModals();
+    });
+    els.historyList.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.dataset.action === "delete") deleteHistoryItem(id);
+      if (btn.dataset.action === "copy") copyHistoryText(id);
+    });
+  }
+
+  buildOptions();
+  initDefaults();
+  setupEnhancedInputs();
+  bindEvents();
+  markAppEnv();
+  renderEmptyPlate();
+  renderHistory();
+  goToInput();
+
+  window.addEventListener("resize", () => {
+    if (latestResult) renderPlate(latestResult);
+    else renderEmptyPlate();
+  });
+  window.addEventListener("orientationchange", () => {
+    setTimeout(() => {
+      if (latestResult) renderPlate(latestResult);
+      else renderEmptyPlate();
+    }, 120);
+  });
+})();
+</script>
+</body>
 </html>
